@@ -38,11 +38,9 @@ LDFLAGS = -L $(LIBFT_DIR) -L $(LIBMFT_DIR)
 
 LIB_RAW = 
 
-SRC_RAW =	main.c ft_traceroute.c parse_option_line.c resolve_hostname.c \
-			send_probes.c sighandlers.c checksum.c ft_gethostname.c \
-			free_and_exit.c time_utils.c print_packet.c print_response_error.c \
+SRC_RAW =	main.c ft_traceroute.c
 
-HEADERS =	options.h ft_traceroute.h ip.h send_probes.h sighandlers.h time_utils.h 
+HEADERS =	options.h ft_traceroute.h
 
 #
 # Creation of files path
