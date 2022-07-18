@@ -9,7 +9,7 @@ static void	print_version(void)
 	fprintf(stderr, "This program has absolutely no warranty\n");
 }
 
-static void	print_usage(FILE *o)
+void		print_usage(FILE *o)
 {
 	fprintf(o, "Usage:\n  traceroute [ -hvV ] host [ packetlen ]\n");
 }
@@ -80,7 +80,9 @@ int	parse_traceroute_options(int ac, char **av, t_global_data *env)
 			if (env->host == NULL)
 			{
 				env->host = av[i];
-				//resolve_hostname(av[i]);
+				if (resolve_hostname(av[i], env))
+					fprintf(stderr, "Cannot handle \"host\" cmdline arg " \
+						"`%s' on position 1 (argc %d)\n", av[i], i);
 			}
 			else
 			{

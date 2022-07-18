@@ -1,6 +1,7 @@
 #include "libft.h"
 #include "options.h"
 #include "ft_traceroute.h"
+#include <stdio.h>
 
 int	ft_traceroute(int ac, char **av)
 {
@@ -14,6 +15,11 @@ int	ft_traceroute(int ac, char **av)
 		if (ret == 1)
 			return 0;
 		return ret;
+	}
+	if (getuid() != 0)
+	{
+		fprintf(stderr, "Must be root to run the program\n");
+		return 2;
 	}
 	return 0;
 }
