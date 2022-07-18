@@ -37,11 +37,11 @@ static int	is_valid_packetlen(char *av)
 **	Parse all the options
 */
 
-int	parse_traceroute_options(int ac, char **av, t_global_data *env)
+int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvV";
+	const char	*optstring = "-hvVg:";
 	static struct option long_options[] =
 	{
 		{"help",	0,			0, 'h'},
@@ -64,12 +64,16 @@ int	parse_traceroute_options(int ac, char **av, t_global_data *env)
 			case 'h':
 				print_usage(stdout);
 				return 1;
+			case 'g':
+				break;
 			case '?':
 				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
 					av[count], count);
 				return FATAL_ERROR;
 			default:
-				break;
+				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
+					av[count], count);
+				return FATAL_ERROR;
 		}
 		count++;
 	}
@@ -81,8 +85,11 @@ int	parse_traceroute_options(int ac, char **av, t_global_data *env)
 			{
 				env->host = av[i];
 				if (resolve_hostname(av[i], env))
+				{
 					fprintf(stderr, "Cannot handle \"host\" cmdline arg " \
 						"`%s' on position 1 (argc %d)\n", av[i], i);
+					return FATAL_ERROR;
+				}
 			}
 			else
 			{
@@ -90,6 +97,7 @@ int	parse_traceroute_options(int ac, char **av, t_global_data *env)
 				{
 					fprintf(stderr, "Cannot handle \"packetlen\" cmdline arg " \
 						"`%s' on position 2 (argc %d)\n", av[i], i);
+					return FATAL_ERROR;
 				}
 			}
 		}

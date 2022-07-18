@@ -7,7 +7,7 @@
 #include <netdb.h>
 #include <stdio.h>
 
-int		resolve_hostname(char *hostname, t_global_data *env)
+int		resolve_hostname(char *hostname, t_env *env)
 {
 	int		ret;
 

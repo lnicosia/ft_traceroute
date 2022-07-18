@@ -8,6 +8,6 @@
 # define FATAL_ERROR 2
 # define PRINT_VERSION 3
 
-int	parse_traceroute_options(int ac, char **av, t_global_data *env);
+int	parse_traceroute_options(int ac, char **av, t_env *env);
 
 #endif
