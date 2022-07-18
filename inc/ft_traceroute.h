@@ -3,6 +3,7 @@
 
 #include <arpa/inet.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 typedef struct			s_env
 {
@@ -14,6 +15,10 @@ typedef struct			s_env
 	size_t				hops;
 	size_t				start_ttl;
 	size_t				port;
+	size_t				nb_probes;
+	struct timeval		max;
+	struct timeval		here;
+	struct timeval		near;
 	int					packetlen;
 	int					socket;
 	//char				padding[4];

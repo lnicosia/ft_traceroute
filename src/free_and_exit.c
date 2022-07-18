@@ -6,6 +6,7 @@ void	free_all(t_env *env)
 {
 	if (env->canonname)
 		ft_strdel(&env->canonname);
+	close(env->socket);
 }
 
 void	free_and_exit_success(t_env *env)

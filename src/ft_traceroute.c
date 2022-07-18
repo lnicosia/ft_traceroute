@@ -9,6 +9,15 @@ static void	init_env(t_env *env)
 {
 	ft_bzero(env, sizeof(*env));
 	env->start_ttl = 1;
+	//	Max timeout
+	env->max.tv_sec = 1;
+	env->max.tv_usec = 0;
+	//	Here timeout
+	env->here.tv_sec = 3;
+	env->here.tv_usec = 0;
+	//	Near timeout
+	env->near.tv_sec = 10;
+	env->near.tv_usec = 0;
 }
 
 static int	init_socket(t_env *env)
@@ -23,7 +32,13 @@ static int	init_socket(t_env *env)
 	if (setsockopt(sckt, SOL_IP, IP_TTL,
 		&env->start_ttl, sizeof(env->start_ttl)))
 	{
-		perror("ft_tracerroute");
+		perror("ft_tracerroute: setsockopt");
+		close(sckt);
+	}
+	if (setsockopt(sckt, SOL_SOCKET, SO_RCVTIMEO,
+		&env->max, sizeof(env->max)))
+	{
+		perror("ft_traceroute: setsockopt");
 		close(sckt);
 	}
 	return sckt;
