@@ -38,7 +38,7 @@ LDFLAGS = -L $(LIBFT_DIR) -L $(LIBMFT_DIR)
 
 LIB_RAW = 
 
-SRC_RAW =	main.c ft_traceroute.c
+SRC_RAW =	main.c ft_traceroute.c parse_option_line.c
 
 HEADERS =	options.h ft_traceroute.h
 
