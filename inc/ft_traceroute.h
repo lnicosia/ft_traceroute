@@ -10,7 +10,7 @@ typedef struct			s_env
 	unsigned long long	opt;
 	char				*host;
 	char				*canonname;
-	char				ip_str[INET_ADDRSTRLEN];
+	char				*ip_str;
 	size_t				hops;
 	size_t				start_ttl;
 	size_t				port;

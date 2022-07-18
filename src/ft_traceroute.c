@@ -52,5 +52,6 @@ int	ft_traceroute(int ac, char **av)
 		free_and_exit_failure(&env);
 	if (send_probes(&env))
 		free_and_exit_failure(&env);
+	free_and_exit_failure(&env);
 	return 0;
 }

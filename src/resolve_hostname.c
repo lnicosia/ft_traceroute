@@ -32,13 +32,11 @@ int		resolve_hostname(char *hostname, t_env *env)
 	struct addrinfo *tmp = ai;
 	while (tmp)
 	{
-		void	*addr = NULL;
 		if (tmp->ai_family == AF_INET)
 		{
 			struct sockaddr_in *ip4 = (struct sockaddr_in*)tmp->ai_addr;
-			addr = &(ip4->sin_addr);
 			ft_memcpy(&env->ip, ip4, sizeof(*ip4));
-			inet_ntop(tmp->ai_family, addr, env->ip_str, INET_ADDRSTRLEN);
+			env->ip_str = inet_ntoa(ip4->sin_addr);
 			break;
 		}
 		tmp = tmp->ai_next;
