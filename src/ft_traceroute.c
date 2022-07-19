@@ -24,7 +24,7 @@ static int	init_socket(t_env *env)
 {
 	int	sckt;
 
-	sckt = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+	sckt = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sckt == -1)
 	{
 		perror("ft_traceroute: socket");
@@ -32,7 +32,7 @@ static int	init_socket(t_env *env)
 	if (setsockopt(sckt, SOL_IP, IP_TTL,
 		&env->start_ttl, sizeof(env->start_ttl)))
 	{
-		perror("ft_tracerroute: setsockopt");
+		perror("ft_traceroute: setsockopt");
 		close(sckt);
 	}
 	if (setsockopt(sckt, SOL_SOCKET, SO_RCVTIMEO,

@@ -43,5 +43,10 @@ int		resolve_hostname(char *hostname, t_env *env)
 	}
 	freeaddrinfo(ai);
 	printf("Host '%s' ip is '%s'\n", hostname, env->ip_str);
+	printf("Port = '%d'\n", env->ip.sin_port);
+	env->ip.sin_port = htons(33434);
+	//	Test on localhost
+	//env->ip.sin_addr.s_addr = inet_addr("127.0.0.1");
+	printf("Port = '%d'\n", ntohs(env->ip.sin_port));
 	return 0;
 }

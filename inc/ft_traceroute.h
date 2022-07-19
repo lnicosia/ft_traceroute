@@ -4,6 +4,22 @@
 #include <arpa/inet.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include <netinet/udp.h>
+#include <netinet/ip_icmp.h>
+
+#define UDP_HEADER_SIZE	sizeof(struct udphdr)
+
+typedef struct			s_udp_packet
+{
+	struct udphdr		header;
+	char				payload[56];
+}						t_udp_packet;
+
+typedef struct			s_icmp_packet
+{
+	struct icmphdr		header;
+	char				payload[56];
+}						t_icmp_packet;
 
 typedef struct			s_env
 {
