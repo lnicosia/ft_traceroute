@@ -3,8 +3,6 @@
 #include "options.h"
 #include <netdb.h>
 
-#define BUFF_SIZE 1024
-
 /** Set out packet data for every probe
 */
 
@@ -83,7 +81,7 @@ void	receive_messages(char *in_buff, t_env *env)
 
 	len = sizeof(ret_addr);
 	ft_bzero(in_buff, BUFF_SIZE);
-	recv_bytes = recvfrom(env->socket, in_buff, BUFF_SIZE, 0,
+	recv_bytes = recvfrom(env->icmp_socket, in_buff, BUFF_SIZE, 0,
 		(struct sockaddr*)&ret_addr, &len);
 	if (recv_bytes == -1)
 	{
@@ -102,20 +100,20 @@ void	receive_messages(char *in_buff, t_env *env)
 
 void	send_current_probes(t_env *env)
 {
-	if (setsockopt(env->socket, SOL_IP, IP_TTL,
+	if (setsockopt(env->icmp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
 		perror("ft_traceroute: setsockopt");
-		close(env->socket);
+		close(env->icmp_socket);
 	}
 	env->ttl++;
-	set_out_packet_data(&env->out_buffer, env);
+	set_out_packet_data(&env->out_ibuffer, env);
 	if (env->opt & OPT_VERBOSE)
 	{
 		printf("Sending:\n");
-		print_icmp_header(&env->out_buffer.header);
+		print_icmp_header(&env->out_ibuffer.header);
 	}
-	if (sendto(env->socket, &env->out_buffer, env->icmp_packet_size,
+	if (sendto(env->icmp_socket, &env->out_ibuffer, env->icmp_packet_size,
 		0, (struct sockaddr*)&env->ip, sizeof(env->ip)) <= 0)
 	{
 		perror("ft_traceroute: sendto");
@@ -125,10 +123,10 @@ void	send_current_probes(t_env *env)
 
 int		send_icmp_probes(t_env *env)
 {
-	char			in_buff[BUFF_SIZE];
+	char	in_buff[BUFF_SIZE];
 
-	env->out_buffer.payload = (char*)malloc(env->payload_size);
-	if (env->out_buffer.payload == NULL)
+	env->out_ibuffer.payload = (char*)malloc(env->payload_size);
+	if (env->out_ibuffer.payload == NULL)
 		free_and_exit_failure(env);
 	ft_bzero(in_buff, sizeof(in_buff));
 	printf("traceroute to %s (%s), %lu hops max, %lu byte packets\n",

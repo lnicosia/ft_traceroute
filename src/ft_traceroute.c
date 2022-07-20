@@ -24,24 +24,25 @@ static void	init_env(t_env *env)
 	//	Near timeout
 	env->near.tv_sec = 10;
 	env->near.tv_usec = 0;
+	env->opt |= OPT_MODE_UDP;
 }
 
-static int	init_socket(t_env *env)
+static void	init_sockets(t_env *env)
 {
-	int	sckt;
 
-	sckt = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	if (sckt == -1)
+	env->icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+	env->udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+	if (env->icmp_socket == -1 || env->udp_socket == -1)
 	{
 		perror("ft_traceroute: socket");
+		free_and_exit_failure(env);
 	}
-	if (setsockopt(sckt, SOL_SOCKET, SO_RCVTIMEO,
+	if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
 		&env->max, sizeof(env->max)))
 	{
 		perror("ft_traceroute: setsockopt");
-		close(sckt);
+		free_and_exit_failure(env);
 	}
-	return sckt;
 }
 
 int	ft_traceroute(int ac, char **av)
@@ -62,11 +63,11 @@ int	ft_traceroute(int ac, char **av)
 		fprintf(stderr, "Must be root to run the program\n");
 		return 2;
 	}
-	env.socket = init_socket(&env);
-	if (env.socket == -1)
-		free_and_exit_failure(&env);
-	if (send_probes(&env))
-		free_and_exit_failure(&env);
+	init_sockets(&env);
+	if (env.opt & OPT_MODE_ICMP)
+		send_icmp_probes(&env);
+	else if (env.opt & OPT_MODE_UDP)
+		send_probes(&env);
 	free_and_exit_failure(&env);
 	return 0;
 }

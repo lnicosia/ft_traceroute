@@ -6,9 +6,14 @@ void	free_all(t_env *env)
 {
 	if (env->canonname)
 		ft_strdel(&env->canonname);
-	if (env->out_buffer.payload)
-		ft_memdel((void**)&env->out_buffer.payload);
-	close(env->socket);
+	if (env->out_ibuffer.payload)
+		ft_memdel((void**)&env->out_ibuffer.payload);
+	if (env->out_ubuffer.payload)
+		ft_memdel((void**)&env->out_ubuffer.payload);
+	if (env->icmp_socket)
+		close(env->icmp_socket > 0);
+	if (env->udp_socket > 0)
+		close(env->udp_socket);
 }
 
 void	free_and_exit_success(t_env *env)

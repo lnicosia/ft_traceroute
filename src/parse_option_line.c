@@ -41,7 +41,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVg:n";
+	const char	*optstring = "-hvVg:nI";
 	static struct option long_options[] =
 	{
 		{"help",	0,			0, 'h'},
@@ -60,6 +60,9 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				break;
 			case 'n':
 				env->opt |= OPT_NUMERIC;
+				break;
+			case 'I':
+				env->opt |= OPT_MODE_ICMP;
 				break;
 			case 'V':
 				print_version();

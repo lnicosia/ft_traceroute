@@ -8,6 +8,7 @@
 #include <netinet/ip_icmp.h>
 
 #define UDP_HEADER_SIZE	sizeof(struct udphdr)
+#define BUFF_SIZE 1024
 
 typedef struct			s_udp_packet
 {
@@ -23,7 +24,8 @@ typedef struct			s_icmp_packet
 
 typedef struct			s_env
 {
-	t_icmp_packet		out_buffer;
+	t_icmp_packet		out_ibuffer;
+	t_icmp_packet		out_ubuffer;
 	struct sockaddr_in	ip;
 	unsigned long long	opt;
 	char				*host;
@@ -40,11 +42,12 @@ typedef struct			s_env
 	struct timeval		here;
 	struct timeval		near;
 	int					packetlen;
-	int					socket;
+	int					udp_socket;
+	int					icmp_socket;
 	int					dest_reached;
 	uint16_t			sequence;
 	uint16_t			port;
-	//char				padding[4];
+	char				padding[4];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);
