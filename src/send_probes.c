@@ -55,10 +55,13 @@ void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 		{
 			char	host[512];
 
+			ft_bzero(host, sizeof(host));
 			if (getnameinfo((struct sockaddr*)addr,
 				sizeof(*addr), host, sizeof(host), NULL, 0, 0))
-				perror("ft_traceroute: getnameinfo");
-			printf("%s (%s)", host, inet_ntoa(ip->ip_src));
+				printf("%s ", inet_ntoa(addr->sin_addr));
+			else
+				printf("%s ", host);
+			printf("(%s)", inet_ntoa(ip->ip_src));
 		}
 		printf("  %.3f ms  %.3f ms  %.3f ms\n", 0.0, 0.0, 0.0);
 		if (icmphdr->type == ICMP_ECHOREPLY)
