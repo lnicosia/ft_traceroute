@@ -12,17 +12,18 @@
 typedef struct			s_udp_packet
 {
 	struct udphdr		header;
-	char				payload[56];
+	char				*payload;
 }						t_udp_packet;
 
 typedef struct			s_icmp_packet
 {
 	struct icmphdr		header;
-	char				payload[56];
+	char				*payload;
 }						t_icmp_packet;
 
 typedef struct			s_env
 {
+	t_icmp_packet		out_buffer;
 	struct sockaddr_in	ip;
 	unsigned long long	opt;
 	char				*host;
@@ -32,6 +33,8 @@ typedef struct			s_env
 	size_t				start_ttl;
 	size_t				port;
 	size_t				nb_probes;
+	size_t				payload_size;
+	size_t				icmp_packet_size;
 	struct timeval		max;
 	struct timeval		here;
 	struct timeval		near;

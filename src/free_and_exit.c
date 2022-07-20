@@ -6,6 +6,8 @@ void	free_all(t_env *env)
 {
 	if (env->canonname)
 		ft_strdel(&env->canonname);
+	if (env->out_buffer.payload)
+		ft_memdel((void**)&env->out_buffer.payload);
 	close(env->socket);
 }
 

@@ -8,6 +8,8 @@
 static void	init_env(t_env *env)
 {
 	ft_bzero(env, sizeof(*env));
+	env->payload_size = 60;
+	env->icmp_packet_size = env->payload_size + sizeof(struct icmphdr);
 	env->start_ttl = 1;
 	//	Max timeout
 	env->max.tv_sec = 1;
