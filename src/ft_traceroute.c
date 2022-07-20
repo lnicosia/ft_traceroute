@@ -12,6 +12,7 @@ static void	init_env(t_env *env)
 	env->payload_size = env->icmp_packet_size - sizeof(struct icmphdr);
 	env->sequence = 0;
 	env->ttl = 1;
+	env->port = 33434;
 	env->max_hops = 30;
 	//	Max timeout
 	env->max.tv_sec = 1;
