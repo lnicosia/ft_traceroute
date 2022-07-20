@@ -31,7 +31,7 @@ typedef struct			s_env
 	char				*ip_str;
 	size_t				hops;
 	size_t				ttl;
-	size_t				nb_probes;
+	size_t				probes_per_hop;
 	size_t				max_hops;
 	size_t				payload_size;
 	size_t				icmp_packet_size;
@@ -53,5 +53,6 @@ void					free_and_exit_failure(t_env *env);
 void					free_and_exit_success(t_env *env);
 void					print_usage(FILE *o);
 int						send_probes(t_env *env);
+int						send_icmp_probes(t_env *env);
 
 #endif

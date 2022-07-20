@@ -14,6 +14,7 @@ static void	init_env(t_env *env)
 	env->ttl = 1;
 	env->port = 33434;
 	env->max_hops = 30;
+	env->probes_per_hop = 3;
 	//	Max timeout
 	env->max.tv_sec = 1;
 	env->max.tv_usec = 0;
