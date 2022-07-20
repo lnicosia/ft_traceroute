@@ -8,9 +8,11 @@
 static void	init_env(t_env *env)
 {
 	ft_bzero(env, sizeof(*env));
-	env->payload_size = 60;
-	env->icmp_packet_size = env->payload_size + sizeof(struct icmphdr);
-	env->start_ttl = 1;
+	env->icmp_packet_size = 60;
+	env->payload_size = env->icmp_packet_size - sizeof(struct icmphdr);
+	env->sequence = 0;
+	env->ttl = 1;
+	env->max_hops = 30;
 	//	Max timeout
 	env->max.tv_sec = 1;
 	env->max.tv_usec = 0;
@@ -30,12 +32,6 @@ static int	init_socket(t_env *env)
 	if (sckt == -1)
 	{
 		perror("ft_traceroute: socket");
-	}
-	if (setsockopt(sckt, SOL_IP, IP_TTL,
-		&env->start_ttl, sizeof(env->start_ttl)))
-	{
-		perror("ft_traceroute: setsockopt");
-		close(sckt);
 	}
 	if (setsockopt(sckt, SOL_SOCKET, SO_RCVTIMEO,
 		&env->max, sizeof(env->max)))

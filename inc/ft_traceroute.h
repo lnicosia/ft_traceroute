@@ -30,9 +30,10 @@ typedef struct			s_env
 	char				*canonname;
 	char				*ip_str;
 	size_t				hops;
-	size_t				start_ttl;
+	size_t				ttl;
 	size_t				port;
 	size_t				nb_probes;
+	size_t				max_hops;
 	size_t				payload_size;
 	size_t				icmp_packet_size;
 	struct timeval		max;
@@ -40,7 +41,8 @@ typedef struct			s_env
 	struct timeval		near;
 	int					packetlen;
 	int					socket;
-	//char				padding[4];
+	uint16_t			sequence;
+	char				padding[6];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);

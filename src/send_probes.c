@@ -24,7 +24,7 @@ void	set_out_packet_data(t_icmp_packet* out_packet, t_env *env)
 		out_packet->payload[i] = '\0';
 	}
 	//	Update sequence (= received packets count) and checksum
-	out_packet->header.un.echo.sequence = 1;
+	out_packet->header.un.echo.sequence = ++env->sequence;
 	out_packet->header.checksum = checksum(out_packet,
 		(int)env->icmp_packet_size);
 }
@@ -38,37 +38,49 @@ int		send_probes(t_env *env)
 	env->out_buffer.payload = (char*)malloc(env->payload_size);
 	if (env->out_buffer.payload == NULL)
 		free_and_exit_failure(env);
-	set_out_packet_data(&env->out_buffer, env);
 	ft_bzero(in_buff, sizeof(in_buff));
 	len = sizeof(env->ip);
-	if (env->opt & OPT_VERBOSE)
-		print_icmp_header(&env->out_buffer.header);
-	if (sendto(env->socket, &env->out_buffer, env->icmp_packet_size,
-		0, (struct sockaddr*)&env->ip, len) <= 0)
+	printf("traceroute to %s (%s), %lu hops max, %lu byte packets\n",
+		env->host, env->ip_str, env->max_hops, env->icmp_packet_size);
+	size_t	i = 0;
+	int		dest_reached = 0;
+	while (i < env->max_hops && dest_reached == 0)
 	{
-		perror("ft_traceroute: sendto");
-		free_and_exit_failure(env);
-	}
-	env->ip.sin_port = htons(33434);
-	recv_bytes = recvfrom(env->socket, in_buff, sizeof(in_buff), 0,
-		(struct sockaddr*)&env->ip, &len);
-	if (recv_bytes == -1)
-	{
-		if (env->opt & OPT_VERBOSE)
-			perror("ft_traceroute: recvfrom");
-	}
-	else if (recv_bytes == 0)
-	{
-		printf("Received 0 bytes\n");
-	}
-	else
-	{
-		if (env->opt & OPT_VERBOSE)
+		if (setsockopt(env->socket, SOL_IP, IP_TTL,
+			&env->ttl, sizeof(env->ttl)))
 		{
-			print_ip4_header((struct ip*)in_buff);
-			print_icmp_header((struct icmphdr*)((void*)in_buff
-			+ sizeof(struct iphdr)));
+			perror("ft_traceroute: setsockopt");
+			close(env->socket);
 		}
+		printf("ttl = %zu\n", env->ttl);
+		env->ttl++;
+		set_out_packet_data(&env->out_buffer, env);
+		if (env->opt & OPT_VERBOSE)
+			print_icmp_header(&env->out_buffer.header);
+		if (sendto(env->socket, &env->out_buffer, env->icmp_packet_size,
+			0, (struct sockaddr*)&env->ip, len) <= 0)
+		{
+			perror("ft_traceroute: sendto");
+			free_and_exit_failure(env);
+		}
+		env->ip.sin_port = htons(33434);
+		recv_bytes = recvfrom(env->socket, in_buff, sizeof(in_buff), 0,
+			(struct sockaddr*)&env->ip, &len);
+		if (recv_bytes == -1)
+		{
+			if (env->opt & OPT_VERBOSE)
+				perror("ft_traceroute: recvfrom");
+		}
+		else
+		{
+			if (env->opt & OPT_VERBOSE)
+			{
+				print_ip4_header((struct ip*)in_buff);
+				print_icmp_header((struct icmphdr*)((void*)in_buff
+				+ sizeof(struct iphdr)));
+			}
+		}
+		i++;
 	}
 	return 0;
 }
