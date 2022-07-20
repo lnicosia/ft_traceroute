@@ -8,8 +8,8 @@
 static void	init_env(t_env *env)
 {
 	ft_bzero(env, sizeof(*env));
-	env->icmp_packet_size = 60;
-	env->payload_size = env->icmp_packet_size - sizeof(struct icmphdr);
+	env->total_packet_size = 60;
+	env->payload_size = env->total_packet_size - sizeof(struct icmphdr);
 	env->sequence = 0;
 	env->ttl = 1;
 	env->port = 33434;
@@ -31,7 +31,7 @@ static void	init_sockets(t_env *env)
 {
 
 	env->icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	env->udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (env->icmp_socket == -1 || env->udp_socket == -1)
 	{
 		perror("ft_traceroute: socket");

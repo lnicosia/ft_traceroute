@@ -36,7 +36,7 @@ typedef struct			s_env
 	size_t				probes_per_hop;
 	size_t				max_hops;
 	size_t				payload_size;
-	size_t				icmp_packet_size;
+	size_t				total_packet_size;
 	size_t				i;
 	struct timeval		max;
 	struct timeval		here;
@@ -57,5 +57,6 @@ void					free_and_exit_success(t_env *env);
 void					print_usage(FILE *o);
 int						send_probes(t_env *env);
 int						send_icmp_probes(t_env *env);
+void					receive_messages(char *in_buff, t_env *env);
 
 #endif
