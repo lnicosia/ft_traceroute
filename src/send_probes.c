@@ -1,6 +1,7 @@
 #include "ft_traceroute.h"
 #include "libft.h"
 #include "options.h"
+#include <netdb.h>
 
 #define BUFF_SIZE 1024
 
@@ -33,7 +34,7 @@ void	set_out_packet_data(t_icmp_packet* out_packet, t_env *env)
 **	Analyze a received packet
 */
 
-void	analyze_packet(char *in_buff, t_env *env)
+void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 {
 	struct ip *ip = (struct ip*)in_buff;
 	struct icmphdr *icmphdr = (struct icmphdr*)(ip + 1);
@@ -44,15 +45,25 @@ void	analyze_packet(char *in_buff, t_env *env)
 		print_ip4_header(ip);
 		print_icmp_header(icmphdr);
 	}
-	if (icmphdr->type == ICMP_TIME_EXCEEDED)
+	else if (icmphdr->type == ICMP_TIME_EXCEEDED
+		|| icmphdr->type == ICMP_ECHOREPLY)
 	{
-		printf("%2ld %s (%s)  %.3fms  %.3fms  %.3fms\n", 
-			env->i,
-			inet_ntoa(ip->ip_src), inet_ntoa(ip->ip_src),
-			0.0, 0.0, 0.0);
+		printf("%2ld  ", env->i);
+		if (env->opt & OPT_NUMERIC)
+			printf("%s", inet_ntoa(ip->ip_src));
+		else
+		{
+			char	host[512];
+
+			if (getnameinfo((struct sockaddr*)addr,
+				sizeof(*addr), host, sizeof(host), NULL, 0, 0))
+				perror("ft_traceroute: getnameinfo");
+			printf("%s (%s)", host, inet_ntoa(ip->ip_src));
+		}
+		printf("  %.3f ms  %.3f ms  %.3f ms\n", 0.0, 0.0, 0.0);
+		if (icmphdr->type == ICMP_ECHOREPLY)
+			env->dest_reached = 1;
 	}
-	else if (icmphdr->type == ICMP_ECHOREPLY)
-		env->dest_reached = 1;
 }
 
 /*
@@ -76,7 +87,7 @@ void	receive_messages(char *in_buff, t_env *env)
 	}
 	else
 	{
-		analyze_packet(in_buff, env);
+		analyze_packet(in_buff, &ret_addr, env);
 	}
 }
 
