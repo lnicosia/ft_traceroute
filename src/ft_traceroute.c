@@ -16,7 +16,7 @@ static void	init_env(t_env *env)
 	env->max_hops = 30;
 	env->probes_per_hop = 3;
 	//	Max timeout
-	env->max.tv_sec = 1;
+	env->max.tv_sec = 5;
 	env->max.tv_usec = 0;
 	//	Here timeout
 	env->here.tv_sec = 3;
@@ -31,10 +31,24 @@ static void	init_sockets(t_env *env)
 {
 
 	env->icmp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
-	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (env->icmp_socket == -1 || env->udp_socket == -1)
+	//env->icmp_socket =
+		//socket(AF_INET, SOCK_DGRAM|SOCK_CLOEXEC|SOCK_NONBLOCK, IPPROTO_IP);
+	if (env->icmp_socket == -1)
 	{
-		perror("ft_traceroute: socket");
+		perror("ft_traceroute: icmp_socket");
+		free_and_exit_failure(env);
+	}
+	/*int yes = 1;
+	if (setsockopt(env->icmp_socket, SOL_IP, IP_RECVERR,
+		&yes, sizeof(yes)))
+	{
+		perror("ft_traceroute: setsockopt");
+		free_and_exit_failure(env);
+	}*/
+	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (env->udp_socket == -1)
+	{
+		perror("ft_traceroute: udp_socket");
 		free_and_exit_failure(env);
 	}
 	if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,

@@ -18,10 +18,11 @@ static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 		print_ip4_header(ip);
 		print_icmp_header(icmphdr);
 	}
-	else if (icmphdr->type == ICMP_TIME_EXCEEDED
-		|| icmphdr->type == ICMP_ECHOREPLY)
+	if (icmphdr->type == ICMP_TIME_EXCEEDED
+		|| icmphdr->type == ICMP_ECHOREPLY
+		|| icmphdr->type == ICMP_DEST_UNREACH)
 	{
-		printf("%2ld  ", env->i);
+		printf("%2ld  ", env->i + 1);
 		if (env->opt & OPT_NUMERIC)
 			printf("%s", inet_ntoa(ip->ip_src));
 		else
@@ -39,7 +40,11 @@ static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 		for (size_t i = 0; i < env->probes_per_hop; i++)
 			printf("  %.3f ms", 0.0);
 		printf("\n");
-		if (icmphdr->type == ICMP_ECHOREPLY)
+		//	Destination reached:	*ICMP_ECHOREPLY for ICMP mode
+		//							*ICMP_DEST_UNREACH for UDP mode
+		if ((env->opt & OPT_MODE_ICMP && icmphdr->type == ICMP_ECHOREPLY)
+			|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
+				&& icmphdr->code == ICMP_PORT_UNREACH))
 			env->dest_reached = 1;
 	}
 }

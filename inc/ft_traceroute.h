@@ -38,6 +38,7 @@ typedef struct			s_env
 	size_t				payload_size;
 	size_t				total_packet_size;
 	size_t				i;
+	size_t				squeries;
 	struct timeval		max;
 	struct timeval		here;
 	struct timeval		near;
