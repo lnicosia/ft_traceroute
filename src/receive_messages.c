@@ -22,7 +22,6 @@ static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 		|| icmphdr->type == ICMP_ECHOREPLY
 		|| icmphdr->type == ICMP_DEST_UNREACH)
 	{
-		printf("%2ld  ", env->i + 1);
 		if (env->opt & OPT_NUMERIC)
 			printf("%s", inet_ntoa(ip->ip_src));
 		else
@@ -63,10 +62,15 @@ void	receive_messages(char *in_buff, t_env *env)
 	ft_bzero(in_buff, BUFF_SIZE);
 	recv_bytes = recvfrom(env->icmp_socket, in_buff, BUFF_SIZE, 0,
 		(struct sockaddr*)&ret_addr, &len);
+	printf("%2ld  ", env->i + 1);
 	if (recv_bytes == -1)
 	{
 		if (env->opt & OPT_VERBOSE)
 			perror("ft_traceroute: recvfrom");
+		else
+		{
+			printf("* * *\n");
+		}
 	}
 	else
 	{

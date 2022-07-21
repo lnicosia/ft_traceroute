@@ -10,6 +10,7 @@ static void	init_env(t_env *env)
 	ft_bzero(env, sizeof(*env));
 	env->total_packet_size = 60;
 	env->payload_size = env->total_packet_size - sizeof(struct icmphdr);
+	env->squeries = 16;
 	env->sequence = 0;
 	env->ttl = 1;
 	env->port = 33434;

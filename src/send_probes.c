@@ -42,5 +42,26 @@ int		send_probes(t_env *env)
 		receive_messages(in_buff, env);
 		env->i++;
 	}
+	/*size_t	total_probes = env->max_hops * env->probes_per_hop;
+	while (env->i < total_probes
+		&& env->dest_reached == 0)
+	{
+		size_t query = 0;
+		while (query < env->squeries && env->i < total_probes
+			&& env->dest_reached == 0)
+		{
+			size_t probe = 0;
+			while (probe < env->probes_per_hop && env->i < total_probes
+				&& env->dest_reached == 0)
+			{
+				send_current_probes(out_buff, env);
+				receive_messages(in_buff, env);
+				env->i++;
+				query++;
+				probe++;
+				printf("Sent probes = %ld\n", env->i);
+			}
+		}
+	}*/
 	return 0;
 }
