@@ -17,7 +17,7 @@ static void	init_env(t_env *env)
 	env->max_hops = 30;
 	env->probes_per_hop = 3;
 	//	Max timeout
-	env->max.tv_sec = 5;
+	env->max.tv_sec = 1;
 	env->max.tv_usec = 0;
 	//	Here timeout
 	env->here.tv_sec = 3;
