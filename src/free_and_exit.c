@@ -14,6 +14,8 @@ void	free_all(t_env *env)
 		close(env->icmp_socket > 0);
 	if (env->udp_socket > 0)
 		close(env->udp_socket);
+	if (env->probes)
+		ft_memdel((void**)&env->probes);
 }
 
 void	free_and_exit_success(t_env *env)

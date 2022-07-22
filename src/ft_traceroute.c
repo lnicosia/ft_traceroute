@@ -79,6 +79,10 @@ int	ft_traceroute(int ac, char **av)
 		return 2;
 	}
 	init_sockets(&env);
+	env.probes = (t_probe*)malloc(env.probes_per_hop * sizeof(t_probe));
+	if (env.probes == NULL)
+		free_and_exit_failure(&env);
+	ft_bzero(env.probes, env.probes_per_hop * sizeof(t_probe));
 	if (env.opt & OPT_MODE_ICMP)
 		send_icmp_probes(&env);
 	else if (env.opt & OPT_MODE_UDP)

@@ -4,12 +4,33 @@
 #include <netdb.h>
 
 /*
+**	Print IP
+*/
+
+void	print_ip(struct sockaddr_in *addr, unsigned long long opt)
+{
+	if (opt & OPT_NUMERIC)
+		printf("%s", inet_ntoa(addr->sin_addr));
+	else
+	{
+		char	host[512];
+			ft_bzero(host, sizeof(host));
+		if (getnameinfo((struct sockaddr*)addr,
+			sizeof(struct sockaddr), host, sizeof(host), NULL, 0, 0))
+			printf("%s ", inet_ntoa(addr->sin_addr));
+		else
+			printf("%s ", host);
+		printf("(%s)", inet_ntoa(addr->sin_addr));
+	}
+}
+
+/*
 **	Analyze a received packet
 */
 
-static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
+void	analyze_probe(t_probe *probe, t_env *env)
 {
-	struct ip *ip = (struct ip*)in_buff;
+	struct ip *ip = (struct ip*)probe->in_buff;
 	struct icmphdr *icmphdr = (struct icmphdr*)(ip + 1);
 
 	if (env->opt & OPT_VERBOSE)
@@ -22,25 +43,16 @@ static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 		|| icmphdr->type == ICMP_ECHOREPLY
 		|| icmphdr->type == ICMP_DEST_UNREACH)
 	{
-		if (env->opt & OPT_NUMERIC)
-			printf("%s", inet_ntoa(ip->ip_src));
-		else
+		printf("  %.3f ms",
+			(double)(probe->recv_time - probe->send_time) / 1000.0);
+		if (ip->ip_src.s_addr != env->current_gateway.sin_addr.s_addr)
 		{
-			char	host[512];
-
-			ft_bzero(host, sizeof(host));
-			if (getnameinfo((struct sockaddr*)addr,
-				sizeof(*addr), host, sizeof(host), NULL, 0, 0))
-				printf("%s ", inet_ntoa(addr->sin_addr));
-			else
-				printf("%s ", host);
-			printf("(%s)", inet_ntoa(ip->ip_src));
+			printf(" ");
+			print_ip(&probe->recv_addr, env->opt);
 		}
-		for (size_t i = 0; i < env->probes_per_hop; i++)
-			printf("  %.3f ms", 0.0);
-		printf("\n");
-		//	Destination reached:	*ICMP_ECHOREPLY for ICMP mode
-		//							*ICMP_DEST_UNREACH for UDP mode
+		//	Destination reached, which means:
+		//		- ICMP_ECHOREPLY for ICMP mode
+		//		- ICMP_DEST_UNREACH for UDP mode
 		if ((env->opt & OPT_MODE_ICMP && icmphdr->type == ICMP_ECHOREPLY)
 			|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
 				&& icmphdr->code == ICMP_PORT_UNREACH))
@@ -49,31 +61,41 @@ static void	analyze_packet(char *in_buff, struct sockaddr_in *addr, t_env *env)
 }
 
 /*
+**	Analyze a received packet
+*/
+
+void	analyze_packets(t_env *env)
+{
+	printf("%2ld  ", env->curr_hop + 1);
+	//	Not sure about this
+	env->current_gateway = env->probes[0].recv_addr;
+	print_ip(&env->probes[0].recv_addr, env->opt);
+	for (size_t i = 0; i < env->probes_per_hop; i++)
+	{
+		if (env->probes[i].recv_bytes == -1)
+			printf("* ");
+		else
+			analyze_probe(&env->probes[i], env);
+	}
+	printf("\n");
+}
+
+/*
 **	Receive message
 */
 
-void	receive_messages(char *in_buff, t_env *env)
+void	receive_messages(t_probe *probe, t_env *env)
 {
-	struct sockaddr_in	ret_addr;
-	ssize_t				recv_bytes;
 	socklen_t			len;
 
-	len = sizeof(ret_addr);
-	ft_bzero(in_buff, BUFF_SIZE);
-	recv_bytes = recvfrom(env->icmp_socket, in_buff, BUFF_SIZE, 0,
-		(struct sockaddr*)&ret_addr, &len);
-	printf("%2ld  ", env->i + 1);
-	if (recv_bytes == -1)
+	len = sizeof(probe->recv_addr);
+	ft_bzero(probe->in_buff, BUFF_SIZE);
+	probe->recv_bytes = recvfrom(env->icmp_socket, probe->in_buff, BUFF_SIZE, 0,
+		(struct sockaddr*)&probe->recv_addr, &len);
+	probe->recv_time = get_time();
+	if (probe->recv_bytes == -1)
 	{
 		if (env->opt & OPT_VERBOSE)
 			perror("ft_traceroute: recvfrom");
-		else
-		{
-			printf("* * *\n");
-		}
-	}
-	else
-	{
-		analyze_packet(in_buff, &ret_addr, env);
 	}
 }

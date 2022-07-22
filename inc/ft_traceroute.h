@@ -22,22 +22,35 @@ typedef struct			s_icmp_packet
 	char				*payload;
 }						t_icmp_packet;
 
+typedef struct			s_probe
+{
+	suseconds_t			send_time;
+	suseconds_t			recv_time;
+	suseconds_t			rtt;
+	struct sockaddr_in	recv_addr;
+	ssize_t				recv_bytes;
+	char				in_buff[BUFF_SIZE];
+}						t_probe;
+
 typedef struct			s_env
 {
 	t_icmp_packet		out_ibuffer;
 	t_icmp_packet		out_ubuffer;
-	struct sockaddr_in	ip;
+	t_probe				*probes;
+	struct sockaddr_in	dest_ip;
+	struct sockaddr_in	current_gateway;
 	unsigned long long	opt;
 	char				*host;
 	char				*canonname;
-	char				*ip_str;
+	char				*dest_ip_str;
 	size_t				hops;
 	size_t				ttl;
 	size_t				probes_per_hop;
 	size_t				max_hops;
 	size_t				payload_size;
 	size_t				total_packet_size;
-	size_t				i;
+	size_t				curr_hop;
+	size_t				curr_probe;
 	size_t				squeries;
 	struct timeval		max;
 	struct timeval		here;
@@ -58,6 +71,7 @@ void					free_and_exit_success(t_env *env);
 void					print_usage(FILE *o);
 int						send_probes(t_env *env);
 int						send_icmp_probes(t_env *env);
-void					receive_messages(char *in_buff, t_env *env);
+void					receive_messages(t_probe *probe, t_env *env);
+void					analyze_packets(t_env *env);
 
 #endif
