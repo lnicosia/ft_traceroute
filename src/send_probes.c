@@ -40,8 +40,7 @@ int		send_probes(t_env *env)
 	{
 		env->curr_query = 0;
 		ft_bzero(env->probes, env->squeries * sizeof(t_probe));
-		while (env->curr_query < env->squeries && env->i < total_probes
-			&& env->dest_reached == 0)
+		while (env->curr_query < env->squeries && env->i < total_probes)
 		{
 			send_current_probes(out_buff, env);
 			receive_messages(&env->probes[env->curr_query], env);
@@ -61,7 +60,6 @@ int		send_probes(t_env *env)
 				}
 			}
 		}
-		//analyze_packets(env);
 	}
 	/*while (env->curr_hop < env->max_hops && env->dest_reached == 0)
 	{

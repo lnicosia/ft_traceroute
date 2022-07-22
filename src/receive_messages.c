@@ -23,9 +23,9 @@ void	receive_messages(t_probe *probe, t_env *env)
 			perror("ft_traceroute: recvfrom");
 		else
 		{
-			printf("*");
-			if (env->curr_probe < env->probes_per_hop - 1)
+			if (env->curr_probe > 0)
 				printf(" ");
+			printf("*");
 		}
 	}
 	else

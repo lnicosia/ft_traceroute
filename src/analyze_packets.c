@@ -47,28 +47,15 @@ void	analyze_probe(t_probe *probe, t_env *env)
 		//	Destination reached, which means:
 		//		- ICMP_ECHOREPLY for ICMP mode
 		//		- ICMP_DEST_UNREACH for UDP mode
-		if ((env->opt & OPT_MODE_ICMP && icmphdr->type == ICMP_ECHOREPLY)
+		if (env->dest_ip.sin_addr.s_addr == env->current_gateway.sin_addr.s_addr
+			&& ((env->opt & OPT_MODE_ICMP && icmphdr->type == ICMP_ECHOREPLY)
 			|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
-				&& icmphdr->code == ICMP_PORT_UNREACH))
+				&& icmphdr->code == ICMP_PORT_UNREACH)))
+		{
+			//printf("Reached\nDest ip = %s\nCurr ip = %s\n",
+			//	inet_ntoa(env->dest_ip.sin_addr),
+			//	inet_ntoa(env->current_gateway.sin_addr));
 			env->dest_reached = 1;
+		}
 	}
-}
-
-/*
-**	Analyze a received packet
-*/
-
-void	analyze_packets(t_env *env)
-{
-	//	Not sure about this
-	env->current_gateway = env->probes[0].recv_addr;
-	print_ip(&env->probes[0].recv_addr, env->opt);
-	for (size_t i = 0; i < env->probes_per_hop; i++)
-	{
-		if (env->probes[i].recv_bytes == -1)
-			printf("* ");
-		else
-			analyze_probe(&env->probes[i], env);
-	}
-	printf("\n");
 }
