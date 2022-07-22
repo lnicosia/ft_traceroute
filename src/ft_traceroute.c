@@ -52,6 +52,12 @@ static void	init_sockets(t_env *env)
 		perror("ft_traceroute: udp_socket");
 		free_and_exit_failure(env);
 	}
+	if (setsockopt(env->icmp_socket, SOL_IP, IP_TTL,
+		&env->ttl, sizeof(env->ttl)))
+	{
+		perror("ft_traceroute: setsockopt");
+		free_and_exit_failure(env);
+	}
 	if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
 		&env->max, sizeof(env->max)))
 	{
@@ -79,10 +85,10 @@ int	ft_traceroute(int ac, char **av)
 		return 2;
 	}
 	init_sockets(&env);
-	env.probes = (t_probe*)malloc(env.probes_per_hop * sizeof(t_probe));
+	env.probes = (t_probe*)malloc(env.squeries * sizeof(t_probe));
 	if (env.probes == NULL)
 		free_and_exit_failure(&env);
-	ft_bzero(env.probes, env.probes_per_hop * sizeof(t_probe));
+	ft_bzero(env.probes, env.squeries * sizeof(t_probe));
 	if (env.opt & OPT_MODE_ICMP)
 		send_icmp_probes(&env);
 	else if (env.opt & OPT_MODE_UDP)

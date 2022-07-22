@@ -43,6 +43,7 @@ typedef struct			s_env
 	char				*host;
 	char				*canonname;
 	char				*dest_ip_str;
+	size_t				i;
 	size_t				hops;
 	size_t				ttl;
 	size_t				probes_per_hop;
@@ -50,6 +51,7 @@ typedef struct			s_env
 	size_t				payload_size;
 	size_t				total_packet_size;
 	size_t				curr_hop;
+	size_t				curr_query;
 	size_t				curr_probe;
 	size_t				squeries;
 	struct timeval		max;
@@ -73,5 +75,7 @@ int						send_probes(t_env *env);
 int						send_icmp_probes(t_env *env);
 void					receive_messages(t_probe *probe, t_env *env);
 void					analyze_packets(t_env *env);
+void					analyze_probe(t_probe *probe, t_env *env);
+void					print_ip(struct sockaddr_in *addr, unsigned long long opt);
 
 #endif

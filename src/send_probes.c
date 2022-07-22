@@ -10,7 +10,7 @@ static void	send_current_probes(char *out_buff, t_env *env)
 	}
 	env->dest_ip.sin_port = htons(env->port++);
 	ft_bzero(out_buff, env->total_packet_size);
-	env->probes[env->curr_probe].send_time = get_time();
+	env->probes[env->curr_query].send_time = get_time();
 	if (sendto(env->udp_socket, out_buff, env->total_packet_size,
 		0, (struct sockaddr*)&env->dest_ip, sizeof(env->dest_ip)) <= 0)
 	{
@@ -34,30 +34,36 @@ int		send_probes(t_env *env)
 		receive_messages(in_buff, env);
 		env->i++;
 	}*/
-	/*size_t	total_probes = env->max_hops * env->probes_per_hop;
+	size_t	total_probes = env->max_hops * env->probes_per_hop;
 	while (env->i < total_probes
 		&& env->dest_reached == 0)
 	{
-		size_t query = 0;
-		while (query < env->squeries && env->i < total_probes
+		env->curr_query = 0;
+		ft_bzero(env->probes, env->squeries * sizeof(t_probe));
+		while (env->curr_query < env->squeries && env->i < total_probes
 			&& env->dest_reached == 0)
 		{
-			size_t probe = 0;
-			while (probe < env->probes_per_hop
-				&& query < env->squeries
-				&& env->i < total_probes && env->dest_reached == 0)
+			send_current_probes(out_buff, env);
+			receive_messages(&env->probes[env->curr_query], env);
+			env->i++;
+			env->curr_query++;
+			env->curr_probe++;
+			if (env->curr_probe >= env->probes_per_hop)
 			{
-				send_current_probes(out_buff, env);
-				receive_messages(in_buff, env);
-				env->i++;
-				query++;
-				probe++;
-				printf("Probe %ld for this hop\n", probe);
-				printf("Total probes = %ld\n", env->i);
+				env->curr_probe = 0;
+				env->curr_hop++;
+				env->ttl++;
+				if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
+						&env->ttl, sizeof(env->ttl)))
+				{
+					perror("ft_traceroute: setsockopt");
+					free_and_exit_failure(env);
+				}
 			}
 		}
-	}*/
-	while (env->curr_hop < env->max_hops && env->dest_reached == 0)
+		//analyze_packets(env);
+	}
+	/*while (env->curr_hop < env->max_hops && env->dest_reached == 0)
 	{
 		//printf("Hop %ld\n", curr_hop);
 		if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
@@ -78,6 +84,6 @@ int		send_probes(t_env *env)
 		analyze_packets(env);
 		env->ttl++;
 		env->curr_hop++;
-	}
+	}*/
 	return 0;
 }
