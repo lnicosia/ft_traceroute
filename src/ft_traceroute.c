@@ -52,7 +52,7 @@ static void	init_sockets(t_env *env)
 		perror("ft_traceroute: udp_socket");
 		free_and_exit_failure(env);
 	}
-	if (setsockopt(env->icmp_socket, SOL_IP, IP_TTL,
+	if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
 		perror("ft_traceroute: setsockopt");
