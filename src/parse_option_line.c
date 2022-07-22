@@ -1,6 +1,7 @@
 #include "options.h"
 #include "libft.h"
 #include <stdio.h>
+#include <math.h>
 
 static void	print_version(void)
 {
@@ -41,7 +42,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVg:nI";
+	const char	*optstring = "-hvVg:nIw:";
 	static struct option long_options[] =
 	{
 		{"help",	0,			0, 'h'},
@@ -64,6 +65,23 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			case 'I':
 				env->opt |= OPT_MODE_ICMP;
 				break;
+			case 'w':
+			{
+				double timeout = ft_atof(optarg);
+				if (timeout < 0)
+				{
+					fprintf(stderr, "bad wait specifications `-%f' used\n",
+						timeout);
+					free_and_exit_failure(env);
+				}
+				double integral;
+				double fractional = modf(timeout, &integral);
+				env->max.tv_sec = (time_t)integral;
+				env->max.tv_usec = (suseconds_t)(fractional * 1000000);
+				if (timeout < 10e-7)
+					env->max.tv_usec = 1;
+				break;
+			}
 			case 'V':
 				print_version();
 				return 1;

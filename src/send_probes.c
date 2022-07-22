@@ -28,13 +28,7 @@ int		send_probes(t_env *env)
 		free_and_exit_failure(env);
 	printf("traceroute to %s (%s), %lu hops max, %lu byte packets\n",
 		env->host, env->dest_ip_str, env->max_hops, env->total_packet_size);
-	/*while (env->i < env->max_hops && env->dest_reached == 0)
-	{
-		send_current_probes(out_buff, env);
-		receive_messages(in_buff, env);
-		env->i++;
-	}*/
-	size_t	total_probes = env->max_hops * env->probes_per_hop;
+	/*size_t	total_probes = env->max_hops * env->probes_per_hop;
 	while (env->i < total_probes
 		&& env->dest_reached == 0)
 	{
@@ -60,28 +54,15 @@ int		send_probes(t_env *env)
 				}
 			}
 		}
-	}
-	/*while (env->curr_hop < env->max_hops && env->dest_reached == 0)
+	}*/
+	while (1)
 	{
-		//printf("Hop %ld\n", curr_hop);
-		if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
-				&env->ttl, sizeof(env->ttl)))
-		{
-			perror("ft_traceroute: setsockopt");
-			free_and_exit_failure(env);
-		}
-		ft_bzero(env->probes, sizeof(t_probe) * env->probes_per_hop);
-		env->curr_probe = 0;
-		while (env->curr_probe < env->probes_per_hop)
+		if (env->dest_reached == 0)
+			break;
+		if (env->outgoing_packets < env->squeries)
 		{
 			send_current_probes(out_buff, env);
-			receive_messages(&env->probes[env->curr_probe], env);
-			//printf("Probe %ld/%ld\n", env->curr_probe, env->probes_per_hop);
-			env->curr_probe++;
 		}
-		analyze_packets(env);
-		env->ttl++;
-		env->curr_hop++;
-	}*/
+	}
 	return 0;
 }

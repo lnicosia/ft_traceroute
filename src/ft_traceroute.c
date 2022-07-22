@@ -17,7 +17,7 @@ static void	init_env(t_env *env)
 	env->max_hops = 30;
 	env->probes_per_hop = 3;
 	//	Max timeout
-	env->max.tv_sec = 1;
+	env->max.tv_sec = 5;
 	env->max.tv_usec = 0;
 	//	Here timeout
 	env->here.tv_sec = 3;
@@ -58,6 +58,8 @@ static void	init_sockets(t_env *env)
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
 	}
+	printf("Setting timeout to %ld sec and %ld usec\n",
+		env->max.tv_sec, env->max.tv_usec);
 	if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
 		&env->max, sizeof(env->max)))
 	{

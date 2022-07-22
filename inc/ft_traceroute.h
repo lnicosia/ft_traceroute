@@ -43,6 +43,7 @@ typedef struct			s_env
 	char				*host;
 	char				*canonname;
 	char				*dest_ip_str;
+	size_t				outgoing_packets;
 	size_t				i;
 	size_t				hops;
 	size_t				ttl;

@@ -47,7 +47,7 @@ void	analyze_probe(t_probe *probe, t_env *env)
 		//	Destination reached, which means:
 		//		- ICMP_ECHOREPLY for ICMP mode
 		//		- ICMP_DEST_UNREACH for UDP mode
-		if (env->dest_ip.sin_addr.s_addr == env->current_gateway.sin_addr.s_addr
+		if (env->dest_ip.sin_addr.s_addr == ip->ip_src.s_addr
 			&& ((env->opt & OPT_MODE_ICMP && icmphdr->type == ICMP_ECHOREPLY)
 			|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
 				&& icmphdr->code == ICMP_PORT_UNREACH)))
