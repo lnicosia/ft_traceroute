@@ -30,23 +30,34 @@ typedef struct			s_probe
 	struct sockaddr_in	recv_addr;
 	ssize_t				recv_bytes;
 	char				in_buff[BUFF_SIZE];
+	uint8_t				ttl;
+	uint8_t				used;
+	uint8_t				order;
+	uint8_t				received;
+	char				padding[4];
 }						t_probe;
 
 typedef struct			s_env
 {
+	//	Output buffer for icmp packet
 	t_icmp_packet		out_ibuffer;
+	//	Input buffer for icmp packet
 	t_icmp_packet		out_ubuffer;
+	//	Received probes. Saved in case we don't receive them
+	//	in the sending order
 	t_probe				*probes;
+	//	Destination IP. Whereto send the probes
 	struct sockaddr_in	dest_ip;
+	//	The first gateway to get received for each ttl
 	struct sockaddr_in	current_gateway;
 	unsigned long long	opt;
 	char				*host;
 	char				*canonname;
 	char				*dest_ip_str;
+	char				*out_buff;
 	size_t				outgoing_packets;
 	size_t				i;
 	size_t				hops;
-	size_t				ttl;
 	size_t				probes_per_hop;
 	size_t				max_hops;
 	size_t				payload_size;
@@ -54,17 +65,25 @@ typedef struct			s_env
 	size_t				curr_hop;
 	size_t				curr_query;
 	size_t				curr_probe;
+	size_t				recv_hop;
+	size_t				recv_query;
+	size_t				recv_probe;
 	size_t				squeries;
 	struct timeval		max;
 	struct timeval		here;
 	struct timeval		near;
+	int					*udp_sockets;
+	int					*icmp_sockets;
 	int					packetlen;
 	int					udp_socket;
 	int					icmp_socket;
 	int					dest_reached;
 	uint16_t			sequence;
 	uint16_t			port;
-	char				padding[4];
+	uint8_t				last_printed_ttl;
+	uint8_t				last_ttl;
+	uint8_t				ttl;
+	char				padding[1];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);
@@ -78,5 +97,6 @@ void					receive_messages(t_probe *probe, t_env *env);
 void					analyze_packets(t_env *env);
 void					analyze_probe(t_probe *probe, t_env *env);
 void					print_ip(struct sockaddr_in *addr, unsigned long long opt);
+void					flush_received_packets(t_env *env);
 
 #endif

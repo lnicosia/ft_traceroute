@@ -1,5 +1,6 @@
 #include "options.h"
 #include "libft.h"
+#include "ft_traceroute.h"
 #include <stdio.h>
 #include <math.h>
 
@@ -91,13 +92,19 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			case 'g':
 				break;
 			case '?':
+			{
 				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
 					av[count], count);
-				return FATAL_ERROR;
+				free_and_exit_failure(env);
+				break;
+			}
 			default:
+			{
 				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
 					av[count], count);
-				return FATAL_ERROR;
+				free_and_exit_failure(env);
+				break;
+			}
 		}
 		count++;
 	}
@@ -112,7 +119,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				{
 					fprintf(stderr, "Cannot handle \"host\" cmdline arg " \
 						"`%s' on position 1 (argc %d)\n", av[i], i);
-					return FATAL_ERROR;
+					free_and_exit_failure(env);
 				}
 			}
 			else
@@ -121,7 +128,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				{
 					fprintf(stderr, "Cannot handle \"packetlen\" cmdline arg " \
 						"`%s' on position 2 (argc %d)\n", av[i], i);
-					return FATAL_ERROR;
+					free_and_exit_failure(env);
 				}
 			}
 		}
