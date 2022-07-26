@@ -19,11 +19,17 @@ static void	send_current_probes(t_env *env)
 	if (curr_query >= env->squeries * 2)
 		return ;
 	if (env->opt & OPT_VERBOSE)
-	{
 		printf("Sending ttl=%hhd port=%d\n", env->ttl, env->port);
-	}
-	env->dest_ip.sin_port = htons(env->port++);
 	ft_bzero(env->out_buff, env->total_packet_size);
+	struct udphdr *udphdr = (struct udphdr*)env->out_buff;
+	udphdr->uh_sport = htons(4242);
+	udphdr->uh_dport = htons(env->port);
+	udphdr->uh_ulen = htons((uint16_t)env->total_packet_size);
+	ft_strcpy((char*)env->out_buff + sizeof(struct udphdr), "Bonjour oui");
+	udphdr->uh_sum = checksum(env->out_buff, (int)env->total_packet_size);
+	if (env->opt & OPT_VERBOSE)
+		print_udp_header(udphdr);
+	env->dest_ip.sin_port = htons(env->port++);
 	env->probes[curr_query].send_time = get_time();
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
