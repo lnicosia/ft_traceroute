@@ -7,8 +7,9 @@
 #include <netinet/udp.h>
 #include <netinet/ip_icmp.h>
 
-#define UDP_HEADER_SIZE	sizeof(struct udphdr)
-#define IP_HEADER_SIZE	sizeof(struct iphdr)
+#define UDP_HEADER_SIZE		sizeof(struct udphdr)
+#define ICMP_HEADER_SIZE	sizeof(struct icmphdr)
+#define IP_HEADER_SIZE		sizeof(struct iphdr)
 #define BUFF_SIZE 1024
 
 typedef struct			s_pseudo_header
@@ -40,12 +41,13 @@ typedef struct			s_probe
 	suseconds_t			rtt;
 	struct sockaddr_in	recv_addr;
 	ssize_t				recv_bytes;
+	size_t				probe;
 	char				in_buff[BUFF_SIZE];
+	uint16_t			checksum;
 	uint8_t				ttl;
 	uint8_t				used;
-	uint8_t				order;
 	uint8_t				received;
-	char				padding[4];
+	char				padding[3];
 }						t_probe;
 
 typedef struct			s_env
@@ -91,9 +93,9 @@ typedef struct			s_env
 	int					dest_reached;
 	uint16_t			sequence;
 	uint16_t			port;
-	uint8_t				last_printed_ttl;
-	uint8_t				last_ttl;
 	uint8_t				ttl;
+	uint8_t				last_ttl;
+	uint8_t				last_printed_ttl;
 	char				padding[1];
 }						t_env;
 

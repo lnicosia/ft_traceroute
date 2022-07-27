@@ -86,6 +86,8 @@ static void	send_current_probes(t_env *env)
 	env->probes[curr_query].send_time = get_time();
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
+	env->probes[curr_query].probe = env->curr_probe;
+	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	//ft_strcpy(env->out_buff, "Bonjour");
 	env->udp_sockets[curr_query] = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (setsockopt(env->udp_sockets[curr_query], SOL_IP, IP_TTL,
