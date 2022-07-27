@@ -83,7 +83,6 @@ static void	send_current_probes(t_env *env)
 		print_udp_header((struct udphdr*)(env->out_buff));
 		//print_icmp_header((struct icmphdr*)(env->out_buff + IP_HEADER_SIZE));
 	}
-	env->probes[curr_query].send_time = get_time();
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
 	env->probes[curr_query].probe = env->curr_probe;
@@ -111,6 +110,7 @@ static void	send_current_probes(t_env *env)
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
+	env->probes[curr_query].send_time = get_time();
 	close(env->udp_sockets[curr_query]);
 	env->outgoing_packets++;
 	env->curr_probe++;
