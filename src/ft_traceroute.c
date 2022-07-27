@@ -45,19 +45,19 @@ static void	init_sockets(t_env *env)
 		perror("ft_traceroute: udp_socket");
 		free_and_exit_failure(env);
 	}
-	/*int yes = 1;
-	if (setsockopt(env->udp_socket, SOL_IP, IP_RECVERR,
+	int yes = 1;
+	if (setsockopt(env->udp_socket, IPPROTO_IP, IP_HDRINCL,
 		&yes, sizeof(yes)))
 	{
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
-	}*/
-	if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
+	}
+	/*if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
-	}
+	}*/
 	if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
 		&env->max, sizeof(env->max)))
 	{

@@ -44,10 +44,11 @@ typedef struct			s_probe
 	size_t				probe;
 	char				in_buff[BUFF_SIZE];
 	uint16_t			checksum;
+	uint16_t			port;
 	uint8_t				ttl;
 	uint8_t				used;
 	uint8_t				received;
-	char				padding[3];
+	char				padding[1];
 }						t_probe;
 
 typedef struct			s_env
@@ -82,6 +83,7 @@ typedef struct			s_env
 	size_t				recv_query;
 	size_t				recv_probe;
 	size_t				squeries;
+	size_t				total_sent;
 	struct timeval		max;
 	struct timeval		here;
 	struct timeval		near;

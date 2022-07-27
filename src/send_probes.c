@@ -69,12 +69,13 @@ static void	send_current_probes(t_env *env)
 	size_t	curr_query = first_available_probe(env);
 	if (curr_query >= env->squeries * 2)
 		return ;
+	//printf("Sending on socket %ld\n", curr_query);
 	if (env->opt & OPT_VERBOSE)
 		printf("Sending ttl=%hhd port=%d\n", env->ttl, env->port);
 	ft_bzero(env->out_buff, env->total_packet_size);
 	//fill_ip_header((struct iphdr*)env->out_buff, env);
-	fill_udp_header((struct ip*)env->out_buff,
-		(struct udphdr*)(env->out_buff), env);
+	//fill_udp_header((struct ip*)env->out_buff,
+	//	(struct udphdr*)(env->out_buff), env);
 	//fill_icmp_header((struct icmphdr*)(env->out_buff + IP_HEADER_SIZE), env);
 	if (env->opt & OPT_VERBOSE)
 	{
@@ -82,14 +83,15 @@ static void	send_current_probes(t_env *env)
 		print_udp_header((struct udphdr*)(env->out_buff));
 		//print_icmp_header((struct icmphdr*)(env->out_buff + IP_HEADER_SIZE));
 	}
-	env->dest_ip.sin_port = htons(env->port++);
 	env->probes[curr_query].send_time = get_time();
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
 	env->probes[curr_query].probe = env->curr_probe;
 	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
+	env->probes[curr_query].port = htons(env->port);
+	env->dest_ip.sin_port = htons(env->port++);
 	//ft_strcpy(env->out_buff, "Bonjour");
-	env->udp_sockets[curr_query] = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
+	env->udp_sockets[curr_query] = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (setsockopt(env->udp_sockets[curr_query], SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
@@ -157,12 +159,15 @@ int		send_probes(t_env *env)
 	{
 		if (env->dest_reached == 1)
 			break;
-		if (env->last_ttl == 0 && env->outgoing_packets < env->squeries)
+		if (env->last_ttl == 0 && env->outgoing_packets < env->squeries
+			&& env->total_sent < env->probes_per_hop * env->max_hops)
 		{
 			send_current_probes(env);
+			env->total_sent++;
 		}
 		else
 		{
+			//printf("Receiving\n");
 			receive_messages(&env->probes[0], env);
 		}
 	}
