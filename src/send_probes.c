@@ -13,6 +13,57 @@ size_t	first_available_probe(t_env *env)
 	return i;
 }
 
+void fill_ip_header(struct iphdr* ip, t_env *env)
+{
+	ip->version = 4;
+	ip->ihl = IP_HEADER_SIZE / 4;
+	ip->tos = 0;
+	ip->tot_len = htons((uint16_t)env->total_packet_size);
+	ip->id = htons(0);
+	ip->frag_off = htons(0);
+	ip->ttl = env->ttl;
+	ip->protocol = IPPROTO_UDP;
+	ip->check = 0;
+	ip->saddr = INADDR_ANY;
+	ip->daddr = env->dest_ip.sin_addr.s_addr;
+}
+
+uint16_t	udp_checksum(struct ip* ip, struct udphdr *udphdr, int len)
+{
+	t_pseudo_header	header;
+
+	header.src = ip->ip_src.s_addr;
+	header.dst = ip->ip_dst.s_addr;
+	header.zeros = 0;
+	header.port = ip->ip_p;
+	header.len = udphdr->uh_ulen;
+	header.udphdr = *udphdr;
+	return checksum(&header, len);
+}
+
+void fill_udp_header(struct ip* ip, struct udphdr* udphdr, t_env *env)
+{
+	udphdr->uh_sport = htons(4242);
+	udphdr->uh_dport = htons(env->port);
+	udphdr->uh_ulen = htons((uint16_t)(env->total_packet_size - IP_HEADER_SIZE));
+	ft_strcpy((char*)env->out_buff + IP_HEADER_SIZE + UDP_HEADER_SIZE,
+		"Bonjour oui");
+	udphdr->uh_sum = udp_checksum(ip, udphdr,
+		(int)(env->total_packet_size - IP_HEADER_SIZE));
+}
+
+void	fill_icmp_header(struct icmphdr* icmphdr, t_env *env)
+{
+	icmphdr->type = ICMP_ECHO;
+	icmphdr->code = 0;
+	icmphdr->un.echo.id = htons((uint16_t)getpid());;
+	ft_strcpy(env->out_buff + IP_HEADER_SIZE + sizeof(struct icmphdr),
+		"Bonjour oui");
+	icmphdr->un.echo.sequence = htons(env->ttl);
+	icmphdr->checksum = checksum(icmphdr,
+		(int)(env->total_packet_size - IP_HEADER_SIZE));
+}
+
 static void	send_current_probes(t_env *env)
 {
 	size_t	curr_query = first_available_probe(env);
@@ -21,32 +72,42 @@ static void	send_current_probes(t_env *env)
 	if (env->opt & OPT_VERBOSE)
 		printf("Sending ttl=%hhd port=%d\n", env->ttl, env->port);
 	ft_bzero(env->out_buff, env->total_packet_size);
-	struct udphdr *udphdr = (struct udphdr*)env->out_buff;
-	udphdr->uh_sport = htons(4242);
-	udphdr->uh_dport = htons(env->port);
-	udphdr->uh_ulen = htons((uint16_t)env->total_packet_size);
-	ft_strcpy((char*)env->out_buff + sizeof(struct udphdr), "Bonjour oui");
-	udphdr->uh_sum = checksum(env->out_buff, (int)env->total_packet_size);
+	//fill_ip_header((struct iphdr*)env->out_buff, env);
+	fill_udp_header((struct ip*)env->out_buff,
+		(struct udphdr*)(env->out_buff), env);
+	//fill_icmp_header((struct icmphdr*)(env->out_buff + IP_HEADER_SIZE), env);
 	if (env->opt & OPT_VERBOSE)
-		print_udp_header(udphdr);
+	{
+		//print_ip4_header((struct ip*)env->out_buff);
+		print_udp_header((struct udphdr*)(env->out_buff));
+		//print_icmp_header((struct icmphdr*)(env->out_buff + IP_HEADER_SIZE));
+	}
 	env->dest_ip.sin_port = htons(env->port++);
 	env->probes[curr_query].send_time = get_time();
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
-	ft_strcpy(env->out_buff, "Bonjour");
-	env->udp_sockets[curr_query] = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	//ft_strcpy(env->out_buff, "Bonjour");
+	env->udp_sockets[curr_query] = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (setsockopt(env->udp_sockets[curr_query], SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
 	}
+	/*char yes = 1;
+	if (setsockopt(env->udp_sockets[curr_query], IPPROTO_IP, IP_HDRINCL,
+		&yes, sizeof(yes)))
+	{
+		perror("ft_traceroute: setsockopt");
+		free_and_exit_failure(env);
+	}*/
 	if (sendto(env->udp_sockets[curr_query], env->out_buff, env->total_packet_size,
 		0, (struct sockaddr*)&env->dest_ip, sizeof(env->dest_ip)) <= 0)
 	{
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
+	close(env->udp_sockets[curr_query]);
 	env->outgoing_packets++;
 	env->curr_probe++;
 	if (env->curr_probe >= env->probes_per_hop)

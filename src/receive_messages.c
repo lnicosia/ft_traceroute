@@ -154,7 +154,6 @@ void	receive_messages(t_probe *probe, t_env *env)
 			print_ip4_header(ip);
 			print_icmp_header(icmphdr);
 		}
-		printf("port = %d\n", ntohs(recv_addr.sin_port));
 		//printf("ttl = %d\n", ip->ip_ttl);
 		update_probes(recv_bytes, recv_addr, ip->ip_ttl, env);
 		if (env->dest_ip.sin_addr.s_addr == ip->ip_src.s_addr

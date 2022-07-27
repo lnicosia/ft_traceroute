@@ -8,7 +8,18 @@
 #include <netinet/ip_icmp.h>
 
 #define UDP_HEADER_SIZE	sizeof(struct udphdr)
+#define IP_HEADER_SIZE	sizeof(struct iphdr)
 #define BUFF_SIZE 1024
+
+typedef struct			s_pseudo_header
+{
+	uint32_t			src;
+	uint32_t			dst;
+	uint8_t				zeros;
+	uint8_t				port;
+	uint16_t			len;
+	struct udphdr		udphdr;
+}						t_pseudo_header;
 
 typedef struct			s_udp_packet
 {

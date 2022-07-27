@@ -39,7 +39,7 @@ static void	init_sockets(t_env *env)
 		perror("ft_traceroute: icmp_socket");
 		free_and_exit_failure(env);
 	}
-	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	env->udp_socket = socket(AF_INET, SOCK_RAW, IPPROTO_UDP);
 	if (env->udp_socket == -1)
 	{
 		perror("ft_traceroute: udp_socket");
