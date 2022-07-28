@@ -20,11 +20,9 @@ static void	init_env(t_env *env)
 	env->max.tv_sec = 5;
 	env->max.tv_usec = 0;
 	//	Here timeout
-	env->here.tv_sec = 3;
-	env->here.tv_usec = 0;
+	env->here = 3.0;
 	//	Near timeout
-	env->near.tv_sec = 10;
-	env->near.tv_usec = 0;
+	env->near = 10.0;
 	env->opt |= OPT_MODE_UDP;
 }
 

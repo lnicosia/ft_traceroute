@@ -110,7 +110,7 @@ static void	send_current_probes(t_env *env)
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
-	env->probes[curr_query].send_time = get_time();
+	gettimeofday(&env->probes[curr_query].send_time, NULL);
 	close(env->udp_sockets[curr_query]);
 	env->outgoing_packets++;
 	env->curr_probe++;
@@ -121,6 +121,54 @@ static void	send_current_probes(t_env *env)
 	}
 }
 
+int		are_last_ttl_probes_all_sent(t_env *env)
+{
+	if (env->last_ttl == 0)
+		return 0;
+	if (env->all_last_probes_sent)
+		return 1;
+
+	uint8_t	nb_last_ttl_probes = 0;
+
+	for (size_t i = 0; i < env->squeries * 2; i++)
+	{
+		if (env->probes[i].ttl == env->last_ttl)
+			nb_last_ttl_probes++;
+	}
+	//printf("Sent %d probes of ttl %d\n", nb_last_ttl_probes, env->last_ttl);
+	if (nb_last_ttl_probes == env->probes_per_hop)
+	{
+		printf("All last probes sent\n");
+		env->all_last_probes_sent = 1;
+		for (size_t i = 0; i < env->squeries * 2; i++)
+		{
+			if (env->probes[i].ttl == env->last_ttl
+				&& env->probes[i].received == 1)
+			{
+				double sec_timeout = 
+					env->here * (double)(env->probes[i].recv_time.tv_sec
+					- env->probes[i].send_time.tv_sec);
+				double usec_timeout = 
+					env->here * (double)(env->probes[i].recv_time.tv_usec
+					- env->probes[i].send_time.tv_usec);
+				struct timeval timeout =
+				{
+					(time_t)sec_timeout,
+					(suseconds_t)usec_timeout
+				};
+				printf("End timeout = %ld sec %ld usec (%ld ms)\n",
+				timeout.tv_sec, timeout.tv_usec, timeout.tv_usec / 1000);
+				if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
+					&timeout, sizeof(timeout)))
+					perror("ft_traceroute: setsockopt for last probe");
+				break;
+			}
+		}
+		return 1;
+	}
+	return 0;
+}
+
 int		send_probes(t_env *env)
 {
 	env->out_buff = (char*)malloc(env->total_packet_size);
@@ -128,49 +176,24 @@ int		send_probes(t_env *env)
 		free_and_exit_failure(env);
 	printf("traceroute to %s (%s), %lu hops max, %lu byte packets\n",
 		env->host, env->dest_ip_str, env->max_hops, env->total_packet_size);
-	/*size_t	total_probes = env->max_hops * env->probes_per_hop;
-	while (env->i < total_probes
-		&& env->dest_reached == 0)
-	{
-		env->curr_query = 0;
-		ft_bzero(env->probes, env->squeries * sizeof(t_probe));
-		while (env->curr_query < env->squeries && env->i < total_probes)
-		{
-			send_current_probes(out_buff, env);
-			receive_messages(&env->probes[env->curr_query], env);
-			env->i++;
-			env->curr_query++;
-			env->curr_probe++;
-			if (env->curr_probe >= env->probes_per_hop)
-			{
-				env->curr_probe = 0;
-				env->curr_hop++;
-				env->ttl++;
-				if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
-						&env->ttl, sizeof(env->ttl)))
-				{
-					perror("ft_traceroute: setsockopt");
-					free_and_exit_failure(env);
-				}
-			}
-		}
-	}*/
 	while (1)
 	{
 		if (env->dest_reached == 1)
 			break;
-		if (env->last_ttl == 0 && env->outgoing_packets < env->squeries
-			&& env->total_sent < env->probes_per_hop * env->max_hops)
+		if (env->outgoing_packets < env->squeries
+			&& env->total_sent < env->probes_per_hop * env->max_hops
+			&& !are_last_ttl_probes_all_sent(env))
 		{
 			send_current_probes(env);
 			env->total_sent++;
 		}
 		else
 		{
-			//printf("Receiving\n");
+			//printf("Receiving (%ld outgoing packets)\n", env->outgoing_packets);
 			receive_messages(&env->probes[0], env);
 		}
 	}
-	flush_received_packets(env);
+	printf("Dest reached\n");
+	flush_received_packets(env->last_ttl, env);
 	return 0;
 }

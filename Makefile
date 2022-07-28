@@ -40,7 +40,7 @@ LIB_RAW =
 
 SRC_RAW =	main.c ft_traceroute.c parse_option_line.c resolve_hostname.c \
 			free_and_exit.c send_probes.c send_icmp_probes.c receive_messages.c\
-			analyze_packets.c 
+			print_ip.c
 
 HEADERS =	options.h ft_traceroute.h
 

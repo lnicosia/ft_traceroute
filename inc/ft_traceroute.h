@@ -36,9 +36,8 @@ typedef struct			s_icmp_packet
 
 typedef struct			s_probe
 {
-	suseconds_t			send_time;
-	suseconds_t			recv_time;
-	suseconds_t			rtt;
+	struct timeval		send_time;
+	struct timeval		recv_time;
 	struct sockaddr_in	recv_addr;
 	ssize_t				recv_bytes;
 	size_t				probe;
@@ -85,11 +84,12 @@ typedef struct			s_env
 	size_t				squeries;
 	size_t				total_sent;
 	struct timeval		max;
-	struct timeval		here;
-	struct timeval		near;
+	double				here;
+	double				near;
 	int					*udp_sockets;
 	int					*icmp_sockets;
 	int					packetlen;
+	int					all_last_probes_sent;
 	int					udp_socket;
 	int					icmp_socket;
 	int					dest_reached;
@@ -98,7 +98,7 @@ typedef struct			s_env
 	uint8_t				ttl;
 	uint8_t				last_ttl;
 	uint8_t				last_printed_ttl;
-	char				padding[1];
+	char				padding[5];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);
@@ -112,6 +112,6 @@ void					receive_messages(t_probe *probe, t_env *env);
 void					analyze_packets(t_env *env);
 void					analyze_probe(t_probe *probe, t_env *env);
 void					print_ip(struct sockaddr_in *addr, unsigned long long opt);
-void					flush_received_packets(t_env *env);
+void					flush_received_packets(uint8_t last_ttl, t_env *env);
 
 #endif
