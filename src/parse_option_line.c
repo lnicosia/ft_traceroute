@@ -43,13 +43,14 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVnIw:m:";
+	const char	*optstring = "-hvVnIw:m:q:";
 	static struct option long_options[] =
 	{
 		{"help",	0,			0, 'h'},
 		{"verbose",	0,			0, 'v'},
 		{"version",	0,			0, 'V'},
 		{"max_hops",0,			0, 'm'},
+		{"queries", 0,			0, 'q'},
 		{0,			0,			0,	0 }
 	};
 
@@ -96,6 +97,17 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				if (env->max_hops == 0)
 				{
 					dprintf(STDERR_FILENO, "first hop out of range\n");
+					free_and_exit_failure(env);
+				}
+				break;
+			}
+			case 'q':
+			{
+				env->probes_per_hop = (size_t)ft_atoll(optarg);
+				env->max_packets = env->probes_per_hop * env->max_hops;
+				if (env->probes_per_hop == 0 || env->probes_per_hop > 10)
+				{
+					dprintf(STDERR_FILENO, "no more than 10 probes per hop\n");
 					free_and_exit_failure(env);
 				}
 				break;

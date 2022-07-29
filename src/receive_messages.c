@@ -5,6 +5,7 @@
 void	print_probes(uint8_t ttl, t_env *env)
 {
 	size_t				last_printed = 0;
+	size_t				printed = 0;
 	struct sockaddr_in	gateway_ip;
 	t_probe				*probe;
 	//	Maximum 10 probes per hop
@@ -33,6 +34,8 @@ void	print_probes(uint8_t ttl, t_env *env)
 			{
 				gateway_ip = probe->recv_addr;
 				print_ip(&probe->recv_addr, env->opt);
+				if (env->probes_per_hop == 1)
+					dprintf(STDOUT_FILENO, " ");
 			}
 			else if (probe->recv_addr.sin_addr.s_addr != gateway_ip.sin_addr.s_addr)
 				print_ip(&probe->recv_addr, env->opt);
@@ -44,8 +47,9 @@ void	print_probes(uint8_t ttl, t_env *env)
 		ft_bzero(probe, sizeof(*probe));
 		env->used_probes--;
 		last_printed = i;
+		printed++;
 	}
-	if (last_printed == env->probes_per_hop - 1)
+	if (last_printed == env->probes_per_hop - 1 && printed > 0)
 	{
 		dprintf(STDOUT_FILENO, "\n");
 		if (env->dest_reached == 0)
