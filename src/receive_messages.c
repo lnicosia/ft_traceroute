@@ -36,8 +36,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 			else if (probe->recv_addr.sin_addr.s_addr != gateway_ip.sin_addr.s_addr)
 				print_ip(&probe->recv_addr, env->opt);
 			printf(" %.3f ms",
-				(double)(timeval_to_usec(probe->recv_time)
-					- timeval_to_usec(probe->send_time)) / 1000.0);
+				(double)(probe->recv_time - probe->send_time) / 1000.0);
 		}
 		else
 			printf("*");
@@ -71,7 +70,7 @@ void	print_next_received_probes(t_env *env)
 }
 
 void	update_probes(char *in_buff, ssize_t recv_bytes, 
-	struct sockaddr_in recv_addr, struct timeval recv_time, t_env *env)
+	struct sockaddr_in recv_addr, uint64_t recv_time, t_env *env)
 {
 	uint8_t	received = 0;
 	t_probe			*probe;
@@ -135,7 +134,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
 			&& icmphdr->code == ICMP_PORT_UNREACH)))
 	{
-		printf("Reached at ttl = %hhu\n", probe->ttl);
+		//printf("Reached at ttl = %hhu\n", probe->ttl);
 		env->last_ttl = probe->ttl;
 		//env->dest_reached = 1;
 		//printf("Last printed ttl = %hhu\n", env->last_printed_ttl);
@@ -161,7 +160,7 @@ void	receive_messages(t_probe *probe, t_env *env)
 	ssize_t				recv_bytes;
 	char				in_buff[BUFF_SIZE];
 	struct sockaddr_in	recv_addr;
-	struct timeval		recv_time;
+	uint64_t			recv_time;
 
 	(void)probe;
 	ft_bzero(&recv_addr, sizeof(recv_addr));
@@ -169,7 +168,7 @@ void	receive_messages(t_probe *probe, t_env *env)
 	ft_bzero(in_buff, BUFF_SIZE);
 	recv_bytes = recvfrom(env->icmp_socket, in_buff, BUFF_SIZE, 0,
 		(struct sockaddr*)&recv_addr, &len);
-	gettimeofday(&recv_time, NULL);
+	recv_time = get_time();
 	if (recv_bytes == -1)
 	{
 		if (env->opt & OPT_VERBOSE)
@@ -177,7 +176,7 @@ void	receive_messages(t_probe *probe, t_env *env)
 		env->outgoing_packets = 0;
 		if (env->last_ttl != 0)
 		{
-			printf("Dest reached and not received\n");
+			//printf("Dest reached and not received\n");
 			env->dest_reached = 1;
 		}
 		else

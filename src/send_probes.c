@@ -110,7 +110,7 @@ static void	send_current_probes(t_env *env)
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
-	gettimeofday(&env->probes[curr_query].send_time, NULL);
+	env->probes[curr_query].send_time = get_time();
 	close(env->udp_sockets[curr_query]);
 	env->outgoing_packets++;
 	env->curr_probe++;
@@ -138,29 +138,32 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 	//printf("Sent %d probes of ttl %d\n", nb_last_ttl_probes, env->last_ttl);
 	if (nb_last_ttl_probes == env->probes_per_hop)
 	{
-		printf("All last probes sent\n");
+		//printf("All last probes sent\n");
 		env->all_last_probes_sent = 1;
 		for (size_t i = 0; i < env->squeries * 2; i++)
 		{
 			if (env->probes[i].ttl == env->last_ttl
 				&& env->probes[i].received == 1)
 			{
+				///printf("Send time is %ld seconds\n", env->probes[i].send_time);
+				//printf("Recv time is %ld seconds\n", env->probes[i].recv_time);
+				uint64_t diff = env->probes[i].recv_time - env->probes[i].send_time;
 				double sec_timeout = 
-					env->here * (double)(env->probes[i].recv_time.tv_sec
-					- env->probes[i].send_time.tv_sec);
-				double usec_timeout = 
-					env->here * (double)(env->probes[i].recv_time.tv_usec
-					- env->probes[i].send_time.tv_usec);
+					env->here * ((double)diff / 1000000);
+				//printf("Time is %lf seconds\n", sec_timeout);
+				double fraction = sec_timeout - (double)((uint64_t)sec_timeout);
+				//printf("Fractionnal is %lf seconds\n", fraction);
+				//printf("usec is %lf seconds\n", fraction * 1000000);
 				struct timeval timeout =
 				{
-					(time_t)sec_timeout,
-					(suseconds_t)usec_timeout
+					(time_t)(sec_timeout),
+					(suseconds_t)(fraction * 1000000)
 				};
-				printf("End timeout = %ld sec %ld usec (%ld ms)\n",
-				timeout.tv_sec, timeout.tv_usec, timeout.tv_usec / 1000);
-				if (setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
-					&timeout, sizeof(timeout)))
-					perror("ft_traceroute: setsockopt for last probe");
+				//printf("End timeout = %ld sec %ld usec (%ld ms)\n",
+				//timeout.tv_sec, timeout.tv_usec, timeout.tv_usec / 1000);
+				//	If setsockopt fails we don't care
+				setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
+					&timeout, sizeof(timeout));
 				break;
 			}
 		}
@@ -193,7 +196,7 @@ int		send_probes(t_env *env)
 			receive_messages(&env->probes[0], env);
 		}
 	}
-	printf("Dest reached\n");
+	//printf("Dest reached\n");
 	flush_received_packets(env->last_ttl, env);
 	return 0;
 }

@@ -36,8 +36,8 @@ typedef struct			s_icmp_packet
 
 typedef struct			s_probe
 {
-	struct timeval		send_time;
-	struct timeval		recv_time;
+	uint64_t			send_time;
+	uint64_t			recv_time;
 	struct sockaddr_in	recv_addr;
 	ssize_t				recv_bytes;
 	size_t				probe;
