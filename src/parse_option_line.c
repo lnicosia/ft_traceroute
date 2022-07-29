@@ -46,15 +46,16 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 	const char	*optstring = "-hvVnIw:m:q:";
 	static struct option long_options[] =
 	{
-		{"help",	0,			0, 'h'},
-		{"verbose",	0,			0, 'v'},
-		{"version",	0,			0, 'V'},
-		{"max_hops",0,			0, 'm'},
-		{"queries", 0,			0, 'q'},
-		{0,			0,			0,	0 }
+		{"help",	0,					0, 'h'},
+		{"verbose",	0,					0, 'v'},
+		{"version",	0,					0, 'V'},
+		{"max_hops",0,					0, 'm'},
+		{"queries", 0,					0, 'q'},
+		{"wait",	required_argument,	0, 'w'},
+		{0,			0,					0,	0 }
 	};
 
-	while ((opt = ft_getopt_silent(ac, av, optstring, &optarg,
+	while ((opt = ft_getopt_long(ac, av, optstring, &optarg,
 		long_options, &option_index)) != -1)
 	{
 		switch (opt)
@@ -120,15 +121,13 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				return 1;
 			case '?':
 			{
-				dprintf(STDERR_FILENO, "Bad option `%s' (argc %d)\n", 
-					av[count], count);
+				print_usage(STDERR_FILENO);
 				free_and_exit_failure(env);
 				break;
 			}
 			default:
 			{
-				dprintf(STDERR_FILENO, "Bad option `%s' (argc %d)\n", 
-					av[count], count);
+				print_usage(STDERR_FILENO);
 				free_and_exit_failure(env);
 				break;
 			}

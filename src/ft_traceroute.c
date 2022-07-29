@@ -80,6 +80,6 @@ int	ft_traceroute(int ac, char **av)
 		send_icmp_probes(&env);
 	else if (env.opt & OPT_MODE_UDP)
 		send_probes(&env);
-	free_and_exit_failure(&env);
+	free_and_exit_success(&env);
 	return 0;
 }

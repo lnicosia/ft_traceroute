@@ -6,8 +6,9 @@ void	print_probes(uint8_t ttl, t_env *env)
 {
 	size_t				last_printed = 0;
 	size_t				printed = 0;
+	int					final_print = 0;
 	struct sockaddr_in	gateway_ip;
-	t_probe				*probe;
+	t_probe				*probe = NULL;
 	//	Maximum 10 probes per hop
 	t_probe				*probes[10] = { NULL };
 
@@ -39,6 +40,8 @@ void	print_probes(uint8_t ttl, t_env *env)
 			}
 			else if (probe->recv_addr.sin_addr.s_addr != gateway_ip.sin_addr.s_addr)
 				print_ip(&probe->recv_addr, env->opt);
+			if (probe->recv_addr.sin_addr.s_addr == env->dest_ip.sin_addr.s_addr)
+				final_print = 1;
 			dprintf(STDOUT_FILENO, " %.3f ms",
 				(double)(probe->recv_time - probe->send_time) / 1000.0);
 		}
@@ -54,6 +57,10 @@ void	print_probes(uint8_t ttl, t_env *env)
 		dprintf(STDOUT_FILENO, "\n");
 		if (env->dest_reached == 0)
 			env->last_printed_ttl = ttl;
+		//	With small nqueries values, we may reach the destination multiple
+		//	times and receive probes with higher ttl before the minimum one
+		if (final_print == 1)
+			free_and_exit_success(env);
 	}
 }
 

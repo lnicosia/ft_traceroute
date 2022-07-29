@@ -68,10 +68,13 @@ static void	send_current_probes(t_env *env)
 {
 	size_t	curr_query = first_available_probe(env);
 	if (curr_query >= env->squeries * 2)
+	{
+		//printf("max\n");
 		return ;
+	}
 	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", curr_query);
-	//if (env->opt & OPT_VERBOSE)
-		//dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
+	if (env->opt & OPT_VERBOSE)
+		dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
 	ft_bzero(env->out_buff, env->total_packet_size);
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
@@ -114,7 +117,7 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 {
 	if (env->last_ttl == 0)
 		return 0;
-	if (env->ttl >= env->last_ttl)
+	if (env->ttl > env->last_ttl)
 	{
 		//dprintf(STDOUT_FILENO, "Dest reached and ttl > env->last_ttl\n");
 		return 1;
