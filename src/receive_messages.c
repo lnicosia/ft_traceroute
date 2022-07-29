@@ -4,49 +4,53 @@
 
 void	print_probes(uint8_t ttl, t_env *env)
 {
-	struct sockaddr_in	first_ip;
-	int					first = 0;
-	size_t				printed = 0;
+	size_t				last_printed = 0;
+	struct sockaddr_in	gateway_ip;
 	t_probe				*probe;
+	//	Maximum 10 probes per hop
+	t_probe				*probes[10] = { NULL };
 
-	printf("%2d  ", ttl);
 	for (size_t i = 0; i < env->squeries * 2; i++)
 	{
 		if (env->probes[i].ttl == ttl)
-		{
-			//printf("ttl = %hhu\n", ttl);
-			probe = &env->probes[i];
-			//printf("probe received = %d\n", probe->received);
-			if (probe->received == 1)
-			{
-				if (first == 0)
-				{
-					first_ip = probe->recv_addr;
-					first = 1;
-					print_ip(&probe->recv_addr, env->opt);
-				}
-				else if (probe->recv_addr.sin_addr.s_addr != first_ip.sin_addr.s_addr)
-				{
-					print_ip(&probe->recv_addr, env->opt);
-				}
-				printf(" %.3f ms",
-					(double)(timeval_to_usec(probe->recv_time)
-						- timeval_to_usec(probe->send_time)) / 1000.0);
-			}
-			else
-				printf("*");
-			ft_bzero(probe, sizeof(*probe));
-			printed++;
-			if (printed < env->probes_per_hop)
-				printf(" ");
-		}
+			probes[env->probes[i].probe] = &env->probes[i];
 	}
-	printf("\n");
-	if (env->dest_reached == 0)
+	for (size_t i = 0; i < env->probes_per_hop; i++)
 	{
-		env->last_printed_ttl = ttl;
-		//printf("\nlast printed updated to %hhu\n", ttl - 1);
+		if (probes[i] == NULL)
+			continue;
+		//printf("ttl = %hhu\n", ttl);
+		probe = probes[i];
+		//printf("probe received = %d\n", probe->received);
+		if (i == 0)
+			printf("%2d  ", ttl);
+		else
+			printf(" ");
+		if (probe->received == 1)
+		{
+				if (i == 0)
+			{
+				gateway_ip = probe->recv_addr;
+				print_ip(&probe->recv_addr, env->opt);
+			}
+			else if (probe->recv_addr.sin_addr.s_addr != gateway_ip.sin_addr.s_addr)
+				print_ip(&probe->recv_addr, env->opt);
+			printf(" %.3f ms",
+				(double)(timeval_to_usec(probe->recv_time)
+					- timeval_to_usec(probe->send_time)) / 1000.0);
+		}
+		else
+			printf("*");
+		ft_bzero(probe, sizeof(*probe));
+		last_printed = i;
 	}
+	if (last_printed == env->probes_per_hop - 1)
+	{
+		printf("\n");
+		if (env->dest_reached == 0)
+			env->last_printed_ttl = ttl;
+	}
+	fflush(stdout);
 }
 
 void	print_next_received_probes(t_env *env)
