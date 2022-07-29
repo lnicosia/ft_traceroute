@@ -83,6 +83,7 @@ typedef struct			s_env
 	size_t				recv_probe;
 	size_t				squeries;
 	size_t				total_sent;
+	size_t				max_packets;
 	struct timeval		max;
 	double				here;
 	double				near;

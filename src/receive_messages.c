@@ -174,6 +174,8 @@ void	receive_messages(t_probe *probe, t_env *env)
 		if (env->opt & OPT_VERBOSE)
 			perror("ft_traceroute: recvfrom");
 		env->outgoing_packets = 0;
+		if (env->total_sent >= env->max_packets)
+			env->dest_reached = 1;
 		if (env->last_ttl != 0)
 		{
 			//printf("Dest reached and not received\n");

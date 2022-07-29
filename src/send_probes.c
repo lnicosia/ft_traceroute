@@ -184,7 +184,7 @@ int		send_probes(t_env *env)
 		if (env->dest_reached == 1)
 			break;
 		if (env->outgoing_packets < env->squeries
-			&& env->total_sent < env->probes_per_hop * env->max_hops
+			&& env->total_sent < env->max_packets
 			&& !are_last_ttl_probes_all_sent(env))
 		{
 			send_current_probes(env);
