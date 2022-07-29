@@ -198,6 +198,9 @@ int		send_probes(t_env *env)
 		}
 	}
 	//dprintf(STDOUT_FILENO, "End of loop\n");
-	flush_received_packets(env->last_ttl, env);
+	if (env->last_ttl == 0)
+		flush_received_packets(env->ttl, env);
+	else
+		flush_received_packets(env->last_ttl, env);
 	return 0;
 }

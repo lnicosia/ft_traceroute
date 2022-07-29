@@ -161,8 +161,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 
 void	flush_received_packets(uint8_t last_ttl, t_env *env)
 {
-	//dprintf(STDOUT_FILENO, "last printed ttl = %d\n", env->last_printed_ttl);
-	if (env->last_printed_ttl + 1 >= last_ttl)
+	if (env->last_printed_ttl + 1 > last_ttl)
 		return ;
 	for (uint8_t i = ++env->last_printed_ttl; i <= last_ttl; i++)
 	{

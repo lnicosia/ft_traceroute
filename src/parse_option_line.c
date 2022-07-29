@@ -43,12 +43,13 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVg:nIw:";
+	const char	*optstring = "-hvVnIw:m:";
 	static struct option long_options[] =
 	{
 		{"help",	0,			0, 'h'},
 		{"verbose",	0,			0, 'v'},
 		{"version",	0,			0, 'V'},
+		{"max_hops",0,			0, 'm'},
 		{0,			0,			0,	0 }
 	};
 
@@ -83,14 +84,28 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 					env->max.tv_usec = 1;
 				break;
 			}
+			case 'm':
+			{
+				env->max_hops = (size_t)ft_atoll(optarg);
+				env->max_packets = env->probes_per_hop * env->max_hops;
+				if (env->max_hops > 255)
+				{
+					dprintf(STDERR_FILENO, "max hops cannot be more than 255\n");
+					free_and_exit_failure(env);
+				}
+				if (env->max_hops == 0)
+				{
+					dprintf(STDERR_FILENO, "first hop out of range\n");
+					free_and_exit_failure(env);
+				}
+				break;
+			}
 			case 'V':
 				print_version();
 				return 1;
 			case 'h':
 				print_usage(STDOUT_FILENO);
 				return 1;
-			case 'g':
-				break;
 			case '?':
 			{
 				dprintf(STDERR_FILENO, "Bad option `%s' (argc %d)\n", 
