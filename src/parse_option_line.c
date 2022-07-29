@@ -130,6 +130,13 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 						"`%s' on position 2 (argc %d)\n", av[i], i);
 					free_and_exit_failure(env);
 				}
+				env->total_packet_size = (size_t)ft_atoll(av[i]);
+				if (env->total_packet_size > 65000)
+				{
+					dprintf(STDERR_FILENO, "too big packetlen %ld specified\n",
+						env->total_packet_size);
+					free_and_exit_failure(env);
+				}
 			}
 		}
 	}

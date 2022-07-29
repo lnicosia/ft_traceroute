@@ -80,7 +80,6 @@ static void	send_current_probes(t_env *env)
 	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	env->probes[curr_query].port = htons(env->port);
 	env->dest_ip.sin_port = htons(env->port++);
-	//ft_strcpy(env->out_buff, "Bonjour");
 	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
@@ -88,13 +87,6 @@ static void	send_current_probes(t_env *env)
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
 	}
-	/*char yes = 1;
-	if (setsockopt(env->udp_sockets[curr_query], IPPROTO_IP, IP_HDRINCL,
-		&yes, sizeof(yes)))
-	{
-		perror("ft_traceroute: setsockopt");
-		free_and_exit_failure(env);
-	}*/
 	if (sendto(env->udp_socket, env->out_buff, env->total_packet_size,
 		0, (struct sockaddr*)&env->dest_ip, sizeof(env->dest_ip)) <= 0)
 	{
