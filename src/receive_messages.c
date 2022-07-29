@@ -26,9 +26,10 @@ void	print_probes(uint8_t ttl, t_env *env)
 			dprintf(STDOUT_FILENO, "%2d  ", ttl);
 		else
 			dprintf(STDOUT_FILENO, " ");
-		if (probe->received == 1)
+		if (probe->received == 1
+			&& probe->recv_time - probe->send_time < timeval_to_usec(env->max))
 		{
-				if (i == 0)
+			if (i == 0)
 			{
 				gateway_ip = probe->recv_addr;
 				print_ip(&probe->recv_addr, env->opt);
