@@ -68,7 +68,17 @@ static void	send_current_probes(t_env *env)
 {
 	size_t	curr_query = first_available_probe(env);
 	if (curr_query >= env->squeries * 2)
+	{
+		printf("No available slot\n");
+		for (size_t i = 0; i < env->squeries * 2; i++)
+		{
+			printf("probe %ld ttl %d received %d used = %d\n",
+				i, env->probes[i].ttl, env->probes[i].received,
+				env->probes[i].used);
+		}
+		free_and_exit_failure(env);
 		return ;
+	}
 	//printf("Sending on socket %ld\n", curr_query);
 	if (env->opt & OPT_VERBOSE)
 		printf("Sending ttl=%hhd port=%d\n", env->ttl, env->port);
@@ -85,6 +95,7 @@ static void	send_current_probes(t_env *env)
 	}
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
+	env->used_probes++;
 	env->probes[curr_query].probe = env->curr_probe;
 	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	env->probes[curr_query].port = htons(env->port);
@@ -113,6 +124,7 @@ static void	send_current_probes(t_env *env)
 	env->probes[curr_query].send_time = get_time();
 	close(env->udp_sockets[curr_query]);
 	env->outgoing_packets++;
+	env->total_sent++;
 	env->curr_probe++;
 	if (env->curr_probe >= env->probes_per_hop)
 	{
@@ -121,10 +133,20 @@ static void	send_current_probes(t_env *env)
 	}
 }
 
+/*
+**	No need to keep sending probes if we reached the dest
+**	and that all probes were sent for it
+*/
+
 int		are_last_ttl_probes_all_sent(t_env *env)
 {
 	if (env->last_ttl == 0)
 		return 0;
+	if (env->ttl >= env->last_ttl)
+	{
+		//printf("Dest reached and ttl > env->last_ttl\n");
+		return 1;
+	}
 	if (env->all_last_probes_sent)
 		return 1;
 
@@ -159,11 +181,11 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 					(time_t)(sec_timeout),
 					(suseconds_t)(fraction * 1000000)
 				};
-				//printf("End timeout = %ld sec %ld usec (%ld ms)\n",
-				//timeout.tv_sec, timeout.tv_usec, timeout.tv_usec / 1000);
+				printf("End timeout = %ld sec %ld usec (%ld ms)\n",
+				timeout.tv_sec, timeout.tv_usec, timeout.tv_usec / 1000);
 				//	If setsockopt fails we don't care
-				setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
-					&timeout, sizeof(timeout));
+				//setsockopt(env->icmp_socket, SOL_SOCKET, SO_RCVTIMEO,
+				//	&timeout, sizeof(timeout));
 				break;
 			}
 		}
@@ -185,18 +207,23 @@ int		send_probes(t_env *env)
 			break;
 		if (env->outgoing_packets < env->squeries
 			&& env->total_sent < env->max_packets
+			&& env->used_probes < env->squeries * 2
 			&& !are_last_ttl_probes_all_sent(env))
 		{
+			//printf("Sending\n");
 			send_current_probes(env);
-			env->total_sent++;
 		}
-		else
+		else// if (env->total_received < env->max_packets)
 		{
-			//printf("Receiving (%ld outgoing packets)\n", env->outgoing_packets);
+			/*printf("Receiving\n");
+			printf("%ld outgoing packets\n", env->outgoing_packets);
+			printf("%ld/%ld sent\n",
+				env->total_sent, env->max_packets);
+			printf("%d\n", are_last_ttl_probes_all_sent(env));*/
 			receive_messages(&env->probes[0], env);
 		}
 	}
-	//printf("Dest reached\n");
+	//printf("End of loop\n");
 	flush_received_packets(env->last_ttl, env);
 	return 0;
 }

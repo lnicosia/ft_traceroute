@@ -41,6 +41,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 		else
 			printf("*");
 		ft_bzero(probe, sizeof(*probe));
+		env->used_probes--;
 		last_printed = i;
 	}
 	if (last_printed == env->probes_per_hop - 1)
@@ -54,7 +55,15 @@ void	print_probes(uint8_t ttl, t_env *env)
 
 void	print_next_received_probes(t_env *env)
 {
-	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < env->ttl; i++)
+	uint8_t	end;
+	
+	if (env->last_ttl == 0)
+		end = env->ttl;
+	else
+		end = env->last_ttl;
+	if (env->last_printed_ttl + 1 >= end)
+		return ;
+	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < end; i++)
 	{
 		size_t	received = 0;
 		for (size_t j = 0; j < env->squeries * 2; j++)
@@ -104,6 +113,13 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 	}
 	if (probe == NULL)
 		return ;
+	env->outgoing_packets--;
+	env->total_received++;
+	if (env->total_received >= env->max_packets)
+	{
+		//printf("Received enough packets\n");
+		env->dest_reached = 1;
+	}
 	for (i = 0; i < env->squeries * 2; i++)
 	{
 		if (env->probes[i].ttl == probe->ttl && env->probes[i].received)
@@ -119,7 +135,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		{
 			//printf("\n%ld probes received for dest IP (ttl %hhu), dest reached\n",
 			//	env->probes_per_hop, env->last_ttl);
-			env->dest_reached = 1;
+			//env->dest_reached = 1;
 		}
 		if (probe->ttl == env->last_printed_ttl + 1)
 		{
@@ -136,6 +152,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 	{
 		//printf("Reached at ttl = %hhu\n", probe->ttl);
 		env->last_ttl = probe->ttl;
+		env->max_packets = env->probes_per_hop * env->last_ttl;
 		//env->dest_reached = 1;
 		//printf("Last printed ttl = %hhu\n", env->last_printed_ttl);
 	}
@@ -144,6 +161,8 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 void	flush_received_packets(uint8_t last_ttl, t_env *env)
 {
 	//printf("last printed ttl = %d\n", env->last_printed_ttl);
+	if (env->last_printed_ttl + 1 >= last_ttl)
+		return ;
 	for (uint8_t i = ++env->last_printed_ttl; i <= last_ttl; i++)
 	{
 		print_probes(i, env);
@@ -173,9 +192,13 @@ void	receive_messages(t_probe *probe, t_env *env)
 	{
 		if (env->opt & OPT_VERBOSE)
 			perror("ft_traceroute: recvfrom");
+		env->total_received += env->outgoing_packets;
 		env->outgoing_packets = 0;
-		if (env->total_sent >= env->max_packets)
+		if (env->total_received >= env->max_packets)
+		{
+			//printf("Received or not all packets\n");
 			env->dest_reached = 1;
+		}
 		if (env->last_ttl != 0)
 		{
 			//printf("Dest reached and not received\n");
@@ -195,7 +218,6 @@ void	receive_messages(t_probe *probe, t_env *env)
 			&& icmphdr->type != ICMP_ECHOREPLY
 			&& icmphdr->type != ICMP_DEST_UNREACH)
 			return ;
-		env->outgoing_packets--;
 		//printf("ttl = %d\n", ip->ip_ttl);
 		update_probes(in_buff, recv_bytes, recv_addr, recv_time, env);
 		if (env->opt & OPT_VERBOSE)
