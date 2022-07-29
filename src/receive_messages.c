@@ -54,7 +54,7 @@ void	print_next_received_probes(t_env *env)
 	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < env->ttl; i++)
 	{
 		size_t	received = 0;
-		for (size_t j = 0; j < env->squeries; j++)
+		for (size_t j = 0; j < env->squeries * 2; j++)
 		{
 			if (env->probes[j].ttl == i && env->probes[j].received == 1)
 				received++;
