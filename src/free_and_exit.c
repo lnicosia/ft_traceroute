@@ -16,18 +16,6 @@ void	free_all(t_env *env)
 		close(env->udp_socket);
 	if (env->probes)
 		ft_memdel((void**)&env->probes);
-	if (env->udp_sockets)
-	{
-		for (size_t i = 0; i < env->squeries; i++)
-			close(env->udp_sockets[i]);
-		ft_memdel((void**)&env->udp_sockets);
-	}
-	if (env->icmp_sockets)
-	{
-		for (size_t i = 0; i < env->squeries; i++)
-			close(env->icmp_sockets[i]);
-		ft_memdel((void**)&env->icmp_sockets);
-	}
 	if (env->out_buff)
 		ft_memdel((void**)&env->out_buff);
 }

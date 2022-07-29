@@ -6,7 +6,7 @@ int	main(int ac, char **av)
 {
 	if (ac < 2)
 	{
-		print_usage(stderr);
+		print_usage(STDERR_FILENO);
 		return 0;
 	}
 	return ft_traceroute(ac, av);

@@ -6,14 +6,14 @@
 
 static void	print_version(void)
 {
-	fprintf(stderr, "lnicosia's ft_traceroute version 1.0\n");
-	fprintf(stderr, "This program is free software; you may redistribute it\n");
-	fprintf(stderr, "This program has absolutely no warranty\n");
+	dprintf(STDERR_FILENO, "lnicosia's ft_traceroute version 1.0\n");
+	dprintf(STDERR_FILENO, "This program is free software; you may redistribute it\n");
+	dprintf(STDERR_FILENO, "This program has absolutely no warranty\n");
 }
 
-void		print_usage(FILE *o)
+void		print_usage(int fd)
 {
-	fprintf(o, "Usage:\n  traceroute [ -hvV ] host [ packetlen ]\n");
+	dprintf(fd, "Usage:\n  traceroute [ -hvV ] host [ packetlen ]\n");
 }
 
 static int	is_valid_packetlen(char *av)
@@ -71,7 +71,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				double timeout = ft_atof(optarg);
 				if (timeout < 0)
 				{
-					fprintf(stderr, "bad wait specifications `-%f' used\n",
+					dprintf(STDERR_FILENO, "bad wait specifications `-%f' used\n",
 						timeout);
 					free_and_exit_failure(env);
 				}
@@ -87,20 +87,20 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				print_version();
 				return 1;
 			case 'h':
-				print_usage(stdout);
+				print_usage(STDOUT_FILENO);
 				return 1;
 			case 'g':
 				break;
 			case '?':
 			{
-				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
+				dprintf(STDERR_FILENO, "Bad option `%s' (argc %d)\n", 
 					av[count], count);
 				free_and_exit_failure(env);
 				break;
 			}
 			default:
 			{
-				fprintf(stderr, "Bad option `%s' (argc %d)\n", 
+				dprintf(STDERR_FILENO, "Bad option `%s' (argc %d)\n", 
 					av[count], count);
 				free_and_exit_failure(env);
 				break;
@@ -117,7 +117,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				env->host = av[i];
 				if (resolve_hostname(av[i], env))
 				{
-					fprintf(stderr, "Cannot handle \"host\" cmdline arg " \
+					dprintf(STDERR_FILENO, "Cannot handle \"host\" cmdline arg " \
 						"`%s' on position 1 (argc %d)\n", av[i], i);
 					free_and_exit_failure(env);
 				}
@@ -126,7 +126,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			{
 				if (!is_valid_packetlen(av[i]))
 				{
-					fprintf(stderr, "Cannot handle \"packetlen\" cmdline arg " \
+					dprintf(STDERR_FILENO, "Cannot handle \"packetlen\" cmdline arg " \
 						"`%s' on position 2 (argc %d)\n", av[i], i);
 					free_and_exit_failure(env);
 				}

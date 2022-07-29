@@ -43,7 +43,7 @@ static void	send_current_probes(t_env *env)
 	set_out_packet_data(&env->out_ibuffer, env);
 	if (env->opt & OPT_VERBOSE)
 	{
-		printf("Sending:\n");
+		dprintf(STDOUT_FILENO, "Sending:\n");
 		print_icmp_header(&env->out_ibuffer.header);
 	}
 	if (sendto(env->icmp_socket, &env->out_ibuffer, env->total_packet_size,
@@ -62,7 +62,7 @@ int		send_icmp_probes(t_env *env)
 	if (env->out_ibuffer.payload == NULL)
 		free_and_exit_failure(env);
 	ft_bzero(in_buff, sizeof(in_buff));
-	printf("traceroute to %s (%s), %lu hops max, %lu byte packets\n",
+	dprintf(STDOUT_FILENO, "traceroute to %s (%s), %lu hops max, %lu byte packets\n",
 		env->host, env->dest_ip_str, env->max_hops, env->total_packet_size);
 	/*while (env->i < env->max_hops && env->dest_reached == 0)
 	{
@@ -73,7 +73,7 @@ int		send_icmp_probes(t_env *env)
 	size_t	curr_hop = 0;
 	while (curr_hop < env->max_hops && env->dest_reached == 0)
 	{
-		printf("Hop %ld\n", curr_hop);
+		dprintf(STDOUT_FILENO, "Hop %ld\n", curr_hop);
 		if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
 				&env->ttl, sizeof(env->ttl)))
 		{
@@ -86,7 +86,7 @@ int		send_icmp_probes(t_env *env)
 		{
 			send_current_probes(env);
 			receive_messages(&env->probes[curr_probe], env);
-			printf("Probe %ld/%ld\n", curr_probe, env->probes_per_hop);
+			dprintf(STDOUT_FILENO, "Probe %ld/%ld\n", curr_probe, env->probes_per_hop);
 			curr_probe++;
 		}
 		env->ttl++;

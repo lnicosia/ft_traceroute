@@ -89,8 +89,6 @@ typedef struct			s_env
 	struct timeval		max;
 	double				here;
 	double				near;
-	int					*udp_sockets;
-	int					*icmp_sockets;
 	int					packetlen;
 	int					all_last_probes_sent;
 	int					udp_socket;
@@ -108,7 +106,7 @@ int						ft_traceroute(int ac, char **av);
 int						resolve_hostname(char *hostname, t_env *env);
 void					free_and_exit_failure(t_env *env);
 void					free_and_exit_success(t_env *env);
-void					print_usage(FILE *o);
+void					print_usage(int fd);
 int						send_probes(t_env *env);
 int						send_icmp_probes(t_env *env);
 void					receive_messages(t_probe *probe, t_env *env);

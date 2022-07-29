@@ -19,13 +19,13 @@ void	print_probes(uint8_t ttl, t_env *env)
 	{
 		if (probes[i] == NULL)
 			continue;
-		//printf("ttl = %hhu\n", ttl);
+		//dprintf(STDOUT_FILENO, "ttl = %hhu\n", ttl);
 		probe = probes[i];
-		//printf("probe received = %d\n", probe->received);
+		//dprintf(STDOUT_FILENO, "probe received = %d\n", probe->received);
 		if (i == 0)
-			printf("%2d  ", ttl);
+			dprintf(STDOUT_FILENO, "%2d  ", ttl);
 		else
-			printf(" ");
+			dprintf(STDOUT_FILENO, " ");
 		if (probe->received == 1)
 		{
 				if (i == 0)
@@ -35,22 +35,21 @@ void	print_probes(uint8_t ttl, t_env *env)
 			}
 			else if (probe->recv_addr.sin_addr.s_addr != gateway_ip.sin_addr.s_addr)
 				print_ip(&probe->recv_addr, env->opt);
-			printf(" %.3f ms",
+			dprintf(STDOUT_FILENO, " %.3f ms",
 				(double)(probe->recv_time - probe->send_time) / 1000.0);
 		}
 		else
-			printf("*");
+			dprintf(STDOUT_FILENO, "*");
 		ft_bzero(probe, sizeof(*probe));
 		env->used_probes--;
 		last_printed = i;
 	}
 	if (last_printed == env->probes_per_hop - 1)
 	{
-		printf("\n");
+		dprintf(STDOUT_FILENO, "\n");
 		if (env->dest_reached == 0)
 			env->last_printed_ttl = ttl;
 	}
-	fflush(stdout);
 }
 
 void	print_next_received_probes(t_env *env)
@@ -90,7 +89,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 	probe = NULL;
 	if (env->opt & OPT_VERBOSE)
 	{
-		printf("\e[36mError message:\n");
+		dprintf(STDOUT_FILENO, "\e[36mError message:\n");
 		print_udp_header(udphdr);
 	}
 	//	Find the sent probe
@@ -100,7 +99,8 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		//if (udphdr->uh_sum == env->probes[i].checksum)
 		if (udphdr->uh_dport == env->probes[i].port)
 		{
-			//printf("Received response from probe %ld of ttl %d and port %d\n",
+			//dprintf(STDOUT_FILENO,
+			//	"Received response from probe %ld of ttl %d and port %d\n",
 			//	env->probes[i].probe, env->probes[i].ttl, ntohs(udphdr->uh_dport));
 			env->probes[i].received = 1;
 			env->probes[i].recv_bytes = recv_bytes;
@@ -117,23 +117,23 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 	env->total_received++;
 	if (env->total_received >= env->max_packets)
 	{
-		//printf("Received enough packets\n");
+		//dprintf(STDOUT_FILENO, "Received enough packets\n");
 		env->dest_reached = 1;
 	}
 	for (i = 0; i < env->squeries * 2; i++)
 	{
 		if (env->probes[i].ttl == probe->ttl && env->probes[i].received)
 			received++;
-		//printf("probe %ld ttl = %d, received = %d used = %d\n",
+		//dprintf(STDOUT_FILENO, "probe %ld ttl = %d, received = %d used = %d\n",
 		//	i, env->probes[i].ttl - 1, env->probes[i].received, env->probes[i].used);
 	}
-	//printf("received %d probes of hop %d\n", received, probe->hop);
+	//dprintf(STDOUT_FILENO, "received %d probes of hop %d\n", received, probe->hop);
 	//	We received all the sent probes for this ttl
 	if (received == env->probes_per_hop)
 	{
 		if (probe->ttl == env->last_ttl)
 		{
-			//printf("\n%ld probes received for dest IP (ttl %hhu), dest reached\n",
+			//dprintf(STDOUT_FILENO, "\n%ld probes received for dest IP (ttl %hhu), dest reached\n",
 			//	env->probes_per_hop, env->last_ttl);
 			//env->dest_reached = 1;
 		}
@@ -150,17 +150,17 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
 			&& icmphdr->code == ICMP_PORT_UNREACH)))
 	{
-		//printf("Reached at ttl = %hhu\n", probe->ttl);
+		//dprintf(STDOUT_FILENO, "Reached at ttl = %hhu\n", probe->ttl);
 		env->last_ttl = probe->ttl;
 		env->max_packets = env->probes_per_hop * env->last_ttl;
 		//env->dest_reached = 1;
-		//printf("Last printed ttl = %hhu\n", env->last_printed_ttl);
+		//dprintf(STDOUT_FILENO, "Last printed ttl = %hhu\n", env->last_printed_ttl);
 	}
 }
 
 void	flush_received_packets(uint8_t last_ttl, t_env *env)
 {
-	//printf("last printed ttl = %d\n", env->last_printed_ttl);
+	//dprintf(STDOUT_FILENO, "last printed ttl = %d\n", env->last_printed_ttl);
 	if (env->last_printed_ttl + 1 >= last_ttl)
 		return ;
 	for (uint8_t i = ++env->last_printed_ttl; i <= last_ttl; i++)
@@ -196,12 +196,12 @@ void	receive_messages(t_probe *probe, t_env *env)
 		env->outgoing_packets = 0;
 		if (env->total_received >= env->max_packets)
 		{
-			//printf("Received or not all packets\n");
+			//dprintf(STDOUT_FILENO, "Received or not all packets\n");
 			env->dest_reached = 1;
 		}
 		if (env->last_ttl != 0)
 		{
-			//printf("Dest reached and not received\n");
+			//dprintf(STDOUT_FILENO, "Dest reached and not received\n");
 			env->dest_reached = 1;
 		}
 		else
@@ -218,11 +218,11 @@ void	receive_messages(t_probe *probe, t_env *env)
 			&& icmphdr->type != ICMP_ECHOREPLY
 			&& icmphdr->type != ICMP_DEST_UNREACH)
 			return ;
-		//printf("ttl = %d\n", ip->ip_ttl);
+		//dprintf(STDOUT_FILENO, "ttl = %d\n", ip->ip_ttl);
 		update_probes(in_buff, recv_bytes, recv_addr, recv_time, env);
 		if (env->opt & OPT_VERBOSE)
 		{
-			printf("Received:\n");
+			dprintf(STDOUT_FILENO, "Received:\n");
 			print_ip4_header(ip);
 			print_icmp_header(icmphdr);
 		}
