@@ -2,95 +2,101 @@
 #include "libft.h"
 #include "options.h"
 
-/** Set out packet data for every probe
-*/
-
-static void	set_out_packet_data(t_icmp_packet* out_packet, t_env *env)
+void	fill_icmp_header(struct icmphdr* icmphdr, t_env *env)
 {
-	ft_bzero(&out_packet->header, sizeof(struct icmphdr));
-	ft_bzero(out_packet->payload, env->payload_size);
-	out_packet->header.type = ICMP_ECHO;
-	out_packet->header.code = 0;
-	out_packet->header.un.echo.id = (uint16_t)get_time();
-	if (env->payload_size > 0)
-	{
-		size_t i;
-		for (i = 0; i < env->payload_size - 1; i++)
-		{
-			out_packet->payload[i] = (char)(i + '0');
-		}
-		out_packet->payload[i] = '\0';
-	}
-	//	Update sequence (= received packets count) and checksum
-	out_packet->header.un.echo.sequence = ++env->sequence;
-	out_packet->header.checksum = checksum(out_packet,
-		(int)env->total_packet_size);
+	ft_bzero(env->out_buff, env->total_packet_size);
+	icmphdr->type = ICMP_ECHO;
+	icmphdr->code = 0;
+	icmphdr->un.echo.id = env->id;
+	ft_strcpy(env->out_buff + ICMP_HEADER_SIZE, "Bonjour oui");
+	icmphdr->un.echo.sequence = htons(env->total_sent);
+	icmphdr->checksum = checksum(icmphdr,
+		(int)(env->total_packet_size - IP_HEADER_SIZE));
 }
-
-/*
-**	Send probes
-*/
 
 static void	send_current_probes(t_env *env)
 {
+	size_t	curr_query = first_available_probe(env);
+	if (curr_query >= env->squeries * 2)
+	{
+		//printf("max\n");
+		return ;
+	}
+	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", curr_query);
+	if (env->opt & OPT_VERBOSE)
+		dprintf(STDOUT_FILENO, "Sending ttl=%hhd sequence=%ld\n",
+			env->ttl, env->total_sent);
+	fill_icmp_header((struct icmphdr*)env->out_buff, env);
+	if (env->opt & OPT_VERBOSE)
+		print_icmp_header((struct icmphdr*)env->out_buff);
+	env->probes[curr_query].ttl = env->ttl;
+	env->probes[curr_query].used = 1;
+	env->probes[curr_query].sequence = htons(env->total_sent);
+	env->used_probes++;
+	env->probes[curr_query].probe = env->curr_probe;
+	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
+	env->probes[curr_query].port = htons(env->port);
+	//env->dest_ip.sin_port = htons(env->port++);
+	//env->icmp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (setsockopt(env->icmp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
 	{
 		perror("ft_traceroute: setsockopt");
 		free_and_exit_failure(env);
 	}
-	env->ttl++;
-	set_out_packet_data(&env->out_ibuffer, env);
-	if (env->opt & OPT_VERBOSE)
-	{
-		dprintf(STDOUT_FILENO, "Sending:\n");
-		print_icmp_header(&env->out_ibuffer.header);
-	}
-	if (sendto(env->icmp_socket, &env->out_ibuffer, env->total_packet_size,
+	if (sendto(env->icmp_socket, env->out_buff, env->total_packet_size,
 		0, (struct sockaddr*)&env->dest_ip, sizeof(env->dest_ip)) <= 0)
 	{
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
+	env->probes[curr_query].send_time = get_time();
+	//close(env->udp_socket);
+	env->outgoing_packets++;
+	env->total_sent++;
+	env->curr_probe++;
+	if (env->curr_probe >= env->probes_per_hop)
+	{
+		env->curr_probe = 0;
+		env->ttl++;
+	}
 }
 
 int		send_icmp_probes(t_env *env)
 {
-	char	in_buff[BUFF_SIZE];
-
-	env->out_ibuffer.payload = (char*)malloc(env->payload_size);
-	if (env->out_ibuffer.payload == NULL)
+	env->out_buff = (char*)malloc(env->total_packet_size);
+	if (env->out_buff == NULL)
 		free_and_exit_failure(env);
-	ft_bzero(in_buff, sizeof(in_buff));
 	dprintf(STDOUT_FILENO, "traceroute to %s (%s), %lu hops max, %lu byte packets\n",
 		env->host, env->dest_ip_str, env->max_hops, env->total_packet_size);
-	/*while (env->i < env->max_hops && env->dest_reached == 0)
+	while (1)
 	{
-		send_current_probes(env);
-		receive_messages(in_buff, env);
-		env->i++;
-	}*/
-	size_t	curr_hop = 0;
-	while (curr_hop < env->max_hops && env->dest_reached == 0)
-	{
-		dprintf(STDOUT_FILENO, "Hop %ld\n", curr_hop);
-		if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
-				&env->ttl, sizeof(env->ttl)))
+		if (env->dest_reached == 1)
+			break;
+		if (env->outgoing_packets < env->squeries
+			&& env->total_sent < env->max_packets
+			&& env->used_probes < env->squeries
+			&& !are_last_ttl_probes_all_sent(env))
 		{
-			perror("ft_traceroute: setsockopt");
-			free_and_exit_failure(env);
-		}
-		ft_bzero(env->probes, sizeof(t_probe) * env->probes_per_hop);
-		size_t	curr_probe = 0;
-		while (curr_probe < env->probes_per_hop)
-		{
+			//dprintf(STDOUT_FILENO, "Sending\n");
 			send_current_probes(env);
-			receive_messages(&env->probes[curr_probe], env);
-			dprintf(STDOUT_FILENO, "Probe %ld/%ld\n", curr_probe, env->probes_per_hop);
-			curr_probe++;
 		}
-		env->ttl++;
-		curr_hop++;
+		else// if (env->total_received < env->max_packets)
+		{
+			//dprintf(STDOUT_FILENO, "Receiving\n");
+			//dprintf(STDOUT_FILENO, "%ld used probes\n", env->used_probes);
+			/*dprintf(STDOUT_FILENO, "%ld outgoing packets\n", env->outgoing_packets);
+			dprintf(STDOUT_FILENO, "%ld used probes\n", env->used_probes);
+			dprintf(STDOUT_FILENO, "%ld/%ld sent\n",
+				env->total_sent, env->max_packets);
+			dprintf(STDOUT_FILENO, "%d\n", are_last_ttl_probes_all_sent(env));*/
+			receive_messages(&env->probes[0], env);
+		}
 	}
+	//dprintf(STDOUT_FILENO, "End of loop\n");
+	if (env->last_ttl == 0)
+		flush_received_packets(env->ttl, env);
+	else
+		flush_received_packets(env->last_ttl, env);
 	return 0;
 }

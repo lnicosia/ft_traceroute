@@ -67,6 +67,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				env->opt |= OPT_NUMERIC;
 				break;
 			case 'I':
+				env->opt &= ~OPT_MODE_UDP;
 				env->opt |= OPT_MODE_ICMP;
 				break;
 			case 'w':

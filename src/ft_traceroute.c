@@ -25,6 +25,7 @@ static void	init_env(t_env *env)
 	//	Near timeout
 	env->near = 10.0;
 	env->opt |= OPT_MODE_UDP;
+	env->id = htons((uint16_t)getpid());;
 }
 
 static void	init_sockets(t_env *env)

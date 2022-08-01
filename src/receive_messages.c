@@ -89,6 +89,47 @@ void	print_next_received_probes(t_env *env)
 	}
 }
 
+t_probe	*find_icmp_probe(struct icmphdr* icmphdr, t_env *env)
+{
+	t_probe	*res = NULL;
+	size_t	i;
+	for (i = 0; i < env->squeries * 2; i++)
+	{
+			if (icmphdr->un.echo.id == env->id
+			&& icmphdr->un.echo.sequence == env->probes[i].sequence)
+		{
+			//dprintf(STDOUT_FILENO,
+			//	"Received response from probe %ld of ttl %d and sequence %d\n",
+			//	env->probes[i].probe, env->probes[i].ttl,
+			//	ntohs(icmphdr->un.echo.sequence));
+			res = &env->probes[i];
+			if (env->last_ttl != 0 && env->probes[i].ttl > env->last_ttl)
+				return NULL;
+			return res;
+		}
+	}
+	return res;
+}
+
+t_probe	*find_udp_probe(struct udphdr *udphdr, t_env *env)
+{
+	t_probe	*res = NULL;
+	size_t	i;
+	for (i = 0; i < env->squeries * 2; i++)
+	{
+		if (udphdr->uh_dport == env->probes[i].port)
+		{
+			//dprintf(STDOUT_FILENO,
+			//	"Received response from probe %ld of ttl %d and port %d\n",
+			//	env->probes[i].probe, env->probes[i].ttl, ntohs(udphdr->uh_dport));
+			res = &env->probes[i];
+			if (env->last_ttl != 0 && env->probes[i].ttl > env->last_ttl)
+				return NULL;
+		}
+	}
+	return res;
+}
+
 void	update_probes(char *in_buff, ssize_t recv_bytes, 
 	struct sockaddr_in recv_addr, uint64_t recv_time, t_env *env)
 {
@@ -97,34 +138,35 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 
 	struct ip *ip = (struct ip*)in_buff;
 	struct icmphdr *icmphdr = (struct icmphdr*)(ip + 1);
-	struct udphdr *udphdr = (struct udphdr*)(in_buff + IP_HEADER_SIZE + ICMP_HEADER_SIZE + IP_HEADER_SIZE);
+	struct udphdr *udphdr = (struct udphdr*)
+		(in_buff + IP_HEADER_SIZE + ICMP_HEADER_SIZE + IP_HEADER_SIZE);
+	struct icmphdr *error_icmphdr = (struct icmphdr*)
+		(in_buff + IP_HEADER_SIZE + ICMP_HEADER_SIZE + IP_HEADER_SIZE);
 	probe = NULL;
 	if (env->opt & OPT_VERBOSE)
 	{
 		dprintf(STDOUT_FILENO, "\e[36mError message:\n");
-		print_udp_header(udphdr);
+		if (env->opt & OPT_MODE_UDP)
+			print_udp_header(udphdr);
+		else if (env->opt & OPT_MODE_ICMP)
+			print_icmp_header(error_icmphdr);
 	}
 	//	Find the sent probe
-	size_t	i;
-	for (i = 0; i < env->squeries * 2; i++)
+	if (env->opt & OPT_MODE_UDP)
+		probe = find_udp_probe(udphdr, env);
+	else if (env->opt & OPT_MODE_ICMP)
 	{
-		//if (udphdr->uh_sum == env->probes[i].checksum)
-		if (udphdr->uh_dport == env->probes[i].port)
-		{
-			//dprintf(STDOUT_FILENO,
-			//	"Received response from probe %ld of ttl %d and port %d\n",
-			//	env->probes[i].probe, env->probes[i].ttl, ntohs(udphdr->uh_dport));
-			env->probes[i].received = 1;
-			env->probes[i].recv_bytes = recv_bytes;
-			env->probes[i].recv_addr = recv_addr;
-			env->probes[i].recv_time = recv_time;
-			probe = &env->probes[i];
-			if (env->last_ttl != 0 && probe->ttl > env->last_ttl)
-				return ;
-		}
+		if (icmphdr->type == ICMP_ECHOREPLY)
+			probe = find_icmp_probe(icmphdr, env);
+		else
+			probe = find_icmp_probe(error_icmphdr, env);
 	}
 	if (probe == NULL)
 		return ;
+	probe->received = 1;
+	probe->recv_bytes = recv_bytes;
+	probe->recv_addr = recv_addr;
+	probe->recv_time = recv_time;
 	env->outgoing_packets--;
 	env->total_received++;
 	if (env->total_received >= env->max_packets)
@@ -132,7 +174,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		//dprintf(STDOUT_FILENO, "Received enough packets\n");
 		env->dest_reached = 1;
 	}
-	for (i = 0; i < env->squeries * 2; i++)
+	for (size_t i = 0; i < env->squeries * 2; i++)
 	{
 		if (env->probes[i].ttl == probe->ttl && env->probes[i].received)
 			received++;
@@ -163,6 +205,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 			&& icmphdr->code == ICMP_PORT_UNREACH)))
 	{
 		//dprintf(STDOUT_FILENO, "Reached at ttl = %hhu\n", probe->ttl);
+		//dprintf(STDOUT_FILENO, "ip = %s\n", inet_ntoa(ip->ip_src));
 		env->last_ttl = probe->ttl;
 		env->max_packets = env->probes_per_hop * env->last_ttl;
 		//env->dest_reached = 1;
@@ -230,12 +273,12 @@ void	receive_messages(t_probe *probe, t_env *env)
 			&& icmphdr->type != ICMP_DEST_UNREACH)
 			return ;
 		//dprintf(STDOUT_FILENO, "ttl = %d\n", ip->ip_ttl);
-		update_probes(in_buff, recv_bytes, recv_addr, recv_time, env);
 		if (env->opt & OPT_VERBOSE)
 		{
 			dprintf(STDOUT_FILENO, "Received:\n");
 			print_ip4_header(ip);
 			print_icmp_header(icmphdr);
 		}
+		update_probes(in_buff, recv_bytes, recv_addr, recv_time, env);
 	}
 }

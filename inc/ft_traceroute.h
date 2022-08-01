@@ -44,10 +44,11 @@ typedef struct			s_probe
 	char				in_buff[BUFF_SIZE];
 	uint16_t			checksum;
 	uint16_t			port;
+	uint16_t			sequence;
 	uint8_t				ttl;
 	uint8_t				used;
 	uint8_t				received;
-	char				padding[1];
+	char				padding[7];
 }						t_probe;
 
 typedef struct			s_env
@@ -95,11 +96,12 @@ typedef struct			s_env
 	int					icmp_socket;
 	int					dest_reached;
 	uint16_t			sequence;
+	uint16_t			id;
 	uint16_t			port;
 	uint8_t				ttl;
 	uint8_t				last_ttl;
 	uint8_t				last_printed_ttl;
-	char				padding[5];
+	char				padding[3];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);
@@ -114,5 +116,7 @@ void					analyze_packets(t_env *env);
 void					analyze_probe(t_probe *probe, t_env *env);
 void					print_ip(struct sockaddr_in *addr, unsigned long long opt);
 void					flush_received_packets(uint8_t last_ttl, t_env *env);
+size_t					first_available_probe(t_env *env);
+int						are_last_ttl_probes_all_sent(t_env *env);
 
 #endif
