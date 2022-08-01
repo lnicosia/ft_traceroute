@@ -15,7 +15,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 	size_t i = env->last_printed_ttl * env->probes_per_hop;
 	for ( ; i < env->total_sent; i++)
 	{
-		if (env->probes[i].ttl == ttl)
+		if (env->probes[i].ttl == ttl && env->probes[i].printed == 0)
 			probes[env->probes[i].probe] = &env->probes[i];
 	}
 	for (i = 0; i < env->probes_per_hop; i++)
@@ -52,6 +52,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 		env->hops_to_print[probe->ttl] = 0;
 		last_printed = i;
 		printed++;
+		probe->printed = 1;
 	}
 	if (last_printed == env->probes_per_hop - 1 && printed > 0)
 	{

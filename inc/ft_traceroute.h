@@ -49,7 +49,8 @@ typedef struct			s_probe
 	uint16_t			sequence;
 	uint8_t				ttl;
 	uint8_t				received;
-	char				padding[0];
+	uint8_t				printed;
+	char				padding[7];
 }						t_probe;
 
 typedef struct			s_env
