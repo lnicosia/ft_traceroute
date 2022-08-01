@@ -11,6 +11,7 @@
 #define ICMP_HEADER_SIZE	sizeof(struct icmphdr)
 #define IP_HEADER_SIZE		sizeof(struct iphdr)
 #define BUFF_SIZE 1024
+#define MAX_SQUERIES		100
 
 typedef struct			s_pseudo_header
 {

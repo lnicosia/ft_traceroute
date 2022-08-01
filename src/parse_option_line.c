@@ -43,16 +43,17 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVnIw:m:q:";
+	const char	*optstring = "-hvVnIw:m:q:N:";
 	static struct option long_options[] =
 	{
-		{"help",	0,					0, 'h'},
-		{"verbose",	0,					0, 'v'},
-		{"version",	0,					0, 'V'},
-		{"max_hops",0,					0, 'm'},
-		{"queries", 0,					0, 'q'},
-		{"wait",	required_argument,	0, 'w'},
-		{0,			0,					0,	0 }
+		{"help",		0,					0, 'h'},
+		{"verbose",		0,					0, 'v'},
+		{"version",		0,					0, 'V'},
+		{"max_hops",	required_argument,	0, 'm'},
+		{"queries",		required_argument,	0, 'q'},
+		{"sim-queries", required_argument,	0, 'N'},
+		{"wait",		required_argument,	0, 'w'},
+		{0,				0,					0,	0 }
 	};
 
 	while ((opt = ft_getopt_long(ac, av, optstring, &optarg,
@@ -85,6 +86,15 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				env->max.tv_usec = (suseconds_t)(fractional * 1000000);
 				if (timeout < 10e-7)
 					env->max.tv_usec = 1;
+				break;
+			}
+			case 'N':
+			{
+				env->squeries = (size_t)ft_atoll(optarg);
+				if (env->squeries == 0)
+					env->squeries = 1;
+				if (env->squeries > MAX_SQUERIES)
+					env->squeries = MAX_SQUERIES;
 				break;
 			}
 			case 'm':
