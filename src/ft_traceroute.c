@@ -70,6 +70,10 @@ int	ft_traceroute(int ac, char **av)
 		return 2;
 	}
 	init_sockets(&env);
+	env.hops_to_print = (uint8_t*)malloc(env.max_hops * sizeof(uint8_t));
+	if (env.hops_to_print == NULL)
+		free_and_exit_failure(&env);
+	ft_bzero(env.hops_to_print, env.max_hops * sizeof(uint8_t));
 	env.probes = (t_probe*)malloc(env.max_packets * sizeof(t_probe));
 	if (env.probes == NULL)
 		free_and_exit_failure(&env);

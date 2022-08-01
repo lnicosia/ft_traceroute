@@ -1,17 +1,6 @@
 #include "ft_traceroute.h"
 #include "libft.h"
 
-size_t	first_available_probe(t_env *env)
-{
-	size_t	i;
-	for (i = 0; i < env->max_packets; i++)
-	{
-		if (env->probes[i].used == 0)
-			return i;
-	}
-	return i;
-}
-
 void fill_ip_header(struct iphdr* ip, t_env *env)
 {
 	ip->version = 4;
@@ -70,7 +59,8 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 
 	uint8_t	nb_last_ttl_probes = 0;
 
-	for (size_t i = 0; i < env->squeries * 2; i++)
+	size_t i = env->last_printed_ttl * env->probes_per_hop;
+	for ( ; i < env->total_sent; i++)
 	{
 		if (env->probes[i].ttl == env->last_ttl)
 			nb_last_ttl_probes++;
@@ -80,7 +70,8 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 	{
 		//dprintf(STDOUT_FILENO, "All last probes sent\n");
 		env->all_last_probes_sent = 1;
-		for (size_t i = 0; i < env->squeries * 2; i++)
+		size_t i = env->last_printed_ttl * env->probes_per_hop;
+		for ( ; i < env->total_sent; i++)
 		{
 			if (env->probes[i].ttl == env->last_ttl
 				&& env->probes[i].received == 1)

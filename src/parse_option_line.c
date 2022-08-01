@@ -101,7 +101,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			{
 				env->max_hops = (size_t)ft_atoll(optarg);
 				env->max_packets = env->probes_per_hop * env->max_hops;
-				if (env->max_hops > 255)
+				if (env->max_hops > MAX_HOPS)
 				{
 					dprintf(STDERR_FILENO, "max hops cannot be more than 255\n");
 					free_and_exit_failure(env);

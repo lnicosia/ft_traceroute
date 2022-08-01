@@ -18,6 +18,8 @@ void	free_all(t_env *env)
 		ft_memdel((void**)&env->probes);
 	if (env->out_buff)
 		ft_memdel((void**)&env->out_buff);
+	if (env->hops_to_print)
+		ft_memdel((void**)&env->hops_to_print);
 }
 
 void	free_and_exit_success(t_env *env)

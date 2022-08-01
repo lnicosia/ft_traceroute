@@ -10,8 +10,9 @@
 #define UDP_HEADER_SIZE		sizeof(struct udphdr)
 #define ICMP_HEADER_SIZE	sizeof(struct icmphdr)
 #define IP_HEADER_SIZE		sizeof(struct iphdr)
-#define BUFF_SIZE 1024
+#define BUFF_SIZE			256
 #define MAX_SQUERIES		100
+#define MAX_HOPS			255
 
 typedef struct			s_pseudo_header
 {
@@ -47,9 +48,8 @@ typedef struct			s_probe
 	uint16_t			port;
 	uint16_t			sequence;
 	uint8_t				ttl;
-	uint8_t				used;
 	uint8_t				received;
-	char				padding[7];
+	char				padding[0];
 }						t_probe;
 
 typedef struct			s_env
@@ -87,9 +87,12 @@ typedef struct			s_env
 	size_t				total_sent;
 	size_t				total_received;
 	size_t				max_packets;
+	size_t				nb_hops_to_print;
 	struct timeval		max;
 	double				here;
 	double				near;
+	uint8_t				*hops_to_print;
+	int					*udp_sockets;
 	int					packetlen;
 	int					all_last_probes_sent;
 	int					udp_socket;
@@ -111,7 +114,7 @@ void					free_and_exit_success(t_env *env);
 void					print_usage(int fd);
 int						send_probes(t_env *env);
 int						send_icmp_probes(t_env *env);
-void					receive_messages(t_probe *probe, t_env *env);
+void					receive_messages(t_env *env);
 void					analyze_packets(t_env *env);
 void					analyze_probe(t_probe *probe, t_env *env);
 void					print_ip(struct sockaddr_in *addr, unsigned long long opt);

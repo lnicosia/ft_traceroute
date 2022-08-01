@@ -16,25 +16,18 @@ void	fill_icmp_header(struct icmphdr* icmphdr, t_env *env)
 
 static void	send_current_probes(t_env *env)
 {
-	size_t	curr_query = first_available_probe(env);
-	if (curr_query >= env->squeries * 2)
-	{
-		//printf("max\n");
-		return ;
-	}
-	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", curr_query);
+	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", env->total_sent);
 	if (env->opt & OPT_VERBOSE)
 		dprintf(STDOUT_FILENO, "Sending ttl=%hhd sequence=%ld\n",
 			env->ttl, env->total_sent);
 	fill_icmp_header((struct icmphdr*)env->out_buff, env);
 	if (env->opt & OPT_VERBOSE)
 		print_icmp_header((struct icmphdr*)env->out_buff);
-	env->probes[curr_query].ttl = env->ttl;
-	env->probes[curr_query].used = 1;
-	env->probes[curr_query].sequence = htons((uint16_t)env->total_sent);
-	env->probes[curr_query].probe = env->curr_probe;
-	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
-	env->probes[curr_query].port = htons(env->port);
+	env->probes[env->total_sent].ttl = env->ttl;
+	env->probes[env->total_sent].sequence = htons((uint16_t)env->total_sent);
+	env->probes[env->total_sent].probe = env->curr_probe;
+	env->probes[env->total_sent].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
+	env->probes[env->total_sent].port = htons(env->port);
 	//env->dest_ip.sin_port = htons(env->port++);
 	//env->icmp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (setsockopt(env->icmp_socket, SOL_IP, IP_TTL,
@@ -49,7 +42,7 @@ static void	send_current_probes(t_env *env)
 		perror("ft_traceroute: sendto");
 		free_and_exit_failure(env);
 	}
-	env->probes[curr_query].send_time = get_time();
+	env->probes[env->total_sent].send_time = get_time();
 	//close(env->udp_socket);
 	env->outgoing_packets++;
 	env->total_sent++;
@@ -88,7 +81,7 @@ int		send_icmp_probes(t_env *env)
 			dprintf(STDOUT_FILENO, "%ld/%ld sent\n",
 				env->total_sent, env->max_packets);
 			dprintf(STDOUT_FILENO, "%d\n", are_last_ttl_probes_all_sent(env));*/
-			receive_messages(&env->probes[0], env);
+			receive_messages(env);
 		}
 	}
 	//dprintf(STDOUT_FILENO, "End of loop\n");

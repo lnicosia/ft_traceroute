@@ -5,15 +5,15 @@
 static void	send_current_probes(t_env *env)
 {
 	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", env->total_sent);
-	//if (env->opt & OPT_VERBOSE)
-		//dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
-	ft_bzero(env->out_buff, env->total_packet_size);
+	if (env->opt & OPT_VERBOSE)
+		dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
+	//ft_bzero(env->out_buff, env->total_packet_size);
 	env->probes[env->total_sent].ttl = env->ttl;
-	env->probes[env->total_sent].used = 1;
 	env->probes[env->total_sent].probe = env->curr_probe;
 	env->probes[env->total_sent].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	env->probes[env->total_sent].port = htons(env->port);
-	env->dest_ip.sin_port = htons(env->port++);
+	env->dest_ip.sin_port = env->probes[env->total_sent].port;
+	env->port++;
 	env->udp_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (setsockopt(env->udp_socket, SOL_IP, IP_TTL,
 		&env->ttl, sizeof(env->ttl)))
@@ -66,7 +66,7 @@ int		send_probes(t_env *env)
 			dprintf(STDOUT_FILENO, "%ld/%ld sent\n",
 				env->total_sent, env->max_packets);
 			dprintf(STDOUT_FILENO, "%d\n", are_last_ttl_probes_all_sent(env));*/
-			receive_messages(&env->probes[0], env);
+			receive_messages(env);
 		}
 	}
 	//dprintf(STDOUT_FILENO, "End of loop\n");

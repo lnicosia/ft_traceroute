@@ -10,10 +10,8 @@
 void	print_ip(struct sockaddr_in *addr, unsigned long long opt)
 {
 	if (opt & OPT_NUMERIC)
-		dprintf(STDOUT_FILENO, "%s", inet_ntoa(addr->sin_addr));
-	else
 	{
-		char	host[512];
+		char	host[128];
 			ft_bzero(host, sizeof(host));
 		if (getnameinfo((struct sockaddr*)addr,
 			sizeof(struct sockaddr), host, sizeof(host), NULL, 0, 0))
@@ -22,4 +20,6 @@ void	print_ip(struct sockaddr_in *addr, unsigned long long opt)
 			dprintf(STDOUT_FILENO, "%s ", host);
 		dprintf(STDOUT_FILENO, "(%s)", inet_ntoa(addr->sin_addr));
 	}
+	else
+		dprintf(STDOUT_FILENO, "%s", inet_ntoa(addr->sin_addr));
 }

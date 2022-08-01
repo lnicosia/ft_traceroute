@@ -12,12 +12,13 @@ void	print_probes(uint8_t ttl, t_env *env)
 	//	Maximum 10 probes per hop
 	t_probe				*probes[10] = { NULL };
 
-	for (size_t i = 0; i < env->total_sent; i++)
+	size_t i = env->last_printed_ttl * env->probes_per_hop;
+	for ( ; i < env->total_sent; i++)
 	{
 		if (env->probes[i].ttl == ttl)
 			probes[env->probes[i].probe] = &env->probes[i];
 	}
-	for (size_t i = 0; i < env->probes_per_hop; i++)
+	for (i = 0; i < env->probes_per_hop; i++)
 	{
 		if (probes[i] == NULL)
 			continue;
@@ -48,6 +49,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 		else
 			dprintf(STDOUT_FILENO, "*");
 		//ft_bzero(probe, sizeof(*probe));
+		env->hops_to_print[probe->ttl] = 0;
 		last_printed = i;
 		printed++;
 	}
@@ -73,26 +75,25 @@ void	print_next_received_probes(t_env *env)
 		end = env->last_ttl;
 	if (env->last_printed_ttl + 1 >= end)
 		return ;
+	//printf("checking between %d and %d\n", env->last_printed_ttl + 1, end);
 	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < end; i++)
 	{
-		size_t	received = 0;
-		for (size_t j = 0; j < env->total_sent; j++)
+		if (env->hops_to_print[i] == 1)
 		{
-			if (env->probes[j].ttl == i && env->probes[j].received == 1)
-				received++;
-		}
-		if (received == env->probes_per_hop)
+			//printf("Need to print %d\n", i);
 			print_probes(i, env);
+			env->nb_hops_to_print--;
+		}
 		else
-			return;
+			return ;
 	}
 }
 
 t_probe	*find_icmp_probe(struct icmphdr* icmphdr, t_env *env)
 {
 	t_probe	*res = NULL;
-	size_t	i;
-	for (i = 0; i < env->total_sent; i++)
+	size_t	i = env->last_printed_ttl * env->probes_per_hop;
+	for ( ; i < env->total_sent; i++)
 	{
 			if (icmphdr->un.echo.id == env->id
 			&& icmphdr->un.echo.sequence == env->probes[i].sequence)
@@ -113,8 +114,8 @@ t_probe	*find_icmp_probe(struct icmphdr* icmphdr, t_env *env)
 t_probe	*find_udp_probe(struct udphdr *udphdr, t_env *env)
 {
 	t_probe	*res = NULL;
-	size_t	i;
-	for (i = 0; i < env->total_sent; i++)
+	size_t	i = env->last_printed_ttl * env->probes_per_hop;
+	for ( ; i < env->total_sent; i++)
 	{
 		if (udphdr->uh_dport == env->probes[i].port)
 		{
@@ -194,7 +195,13 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		{
 			print_probes(probe->ttl, env);
 			//	Print next probes if they are already received
-			print_next_received_probes(env);
+			if (env->nb_hops_to_print > 0)
+				print_next_received_probes(env);
+		}
+		else
+		{
+			env->nb_hops_to_print++;
+			env->hops_to_print[probe->ttl] = 1;
 		}
 	}
 	if (env->dest_ip.sin_addr.s_addr == ip->ip_src.s_addr
@@ -228,7 +235,7 @@ void	flush_received_packets(uint8_t last_ttl, t_env *env)
 **	Receive message
 */
 
-void	receive_messages(t_probe *probe, t_env *env)
+void	receive_messages(t_env *env)
 {
 	socklen_t			len;
 	ssize_t				recv_bytes;
@@ -236,13 +243,11 @@ void	receive_messages(t_probe *probe, t_env *env)
 	struct sockaddr_in	recv_addr;
 	uint64_t			recv_time;
 
-	(void)probe;
 	ft_bzero(&recv_addr, sizeof(recv_addr));
 	len = sizeof(recv_addr);
 	ft_bzero(in_buff, BUFF_SIZE);
 	recv_bytes = recvfrom(env->icmp_socket, in_buff, BUFF_SIZE, 0,
 		(struct sockaddr*)&recv_addr, &len);
-	recv_time = get_time();
 	if (recv_bytes == -1)
 	{
 		if (env->opt & OPT_VERBOSE)
@@ -264,6 +269,7 @@ void	receive_messages(t_probe *probe, t_env *env)
 	}
 	else
 	{
+		recv_time = get_time();
 		struct ip *ip = (struct ip*)in_buff;
 		struct icmphdr *icmphdr = (struct icmphdr*)(ip + 1);
 		//struct udphdr	*udphdr =
