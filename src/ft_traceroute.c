@@ -13,10 +13,7 @@ static void	init_env(t_env *env)
 	env->squeries = 16;
 	env->sequence = 0;
 	env->ttl = 1;
-	if (env->opt & OPT_MODE_ICMP)
-		env->port = 0;
-	else if (env->opt & OPT_MODE_UDP)
-		env->port = 33434;
+	env->port = 33434;
 	env->max_hops = 30;
 	env->probes_per_hop = 3;
 	env->max_packets = env->probes_per_hop * env->max_hops;

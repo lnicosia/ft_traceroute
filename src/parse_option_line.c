@@ -54,6 +54,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 		{"sim-queries", required_argument,	0, 'N'},
 		{"wait",		required_argument,	0, 'w'},
 		{"port",		required_argument,	0, 'p'},
+		{"sport",		required_argument,	0,  0 },
 		{0,				0,					0,	0 }
 	};
 
@@ -62,6 +63,14 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 	{
 		switch (opt)
 		{
+			case 0:
+			{
+				if (ft_strequ(long_options[option_index].name, "sport"))
+				{
+					printf("Sport = %d\n", ft_atoi(optarg));
+				}
+				break;
+			}
 			case 'v':
 				env->opt |= OPT_VERBOSE;
 				break;
@@ -69,9 +78,12 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				env->opt |= OPT_NUMERIC;
 				break;
 			case 'I':
+			{
 				env->opt &= ~OPT_MODE_UDP;
 				env->opt |= OPT_MODE_ICMP;
+				env->port = 0;
 				break;
+			}
 			case 'w':
 			{
 				double timeout = ft_atof(optarg);
@@ -93,6 +105,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			{
 				double port = ft_atof(optarg);
 				env->port = (uint16_t)port;
+				printf("port = %d\n", env->port);
 				break;
 			}
 			case 'N':
