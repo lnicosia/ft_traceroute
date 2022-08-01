@@ -87,7 +87,6 @@ typedef struct			s_env
 	size_t				total_sent;
 	size_t				total_received;
 	size_t				max_packets;
-	size_t				used_probes;
 	struct timeval		max;
 	double				here;
 	double				near;

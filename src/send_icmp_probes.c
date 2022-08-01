@@ -9,7 +9,7 @@ void	fill_icmp_header(struct icmphdr* icmphdr, t_env *env)
 	icmphdr->code = 0;
 	icmphdr->un.echo.id = env->id;
 	ft_strcpy(env->out_buff + ICMP_HEADER_SIZE, "Bonjour oui");
-	icmphdr->un.echo.sequence = htons(env->total_sent);
+	icmphdr->un.echo.sequence = htons((uint16_t)env->total_sent);
 	icmphdr->checksum = checksum(icmphdr,
 		(int)(env->total_packet_size - IP_HEADER_SIZE));
 }
@@ -31,8 +31,7 @@ static void	send_current_probes(t_env *env)
 		print_icmp_header((struct icmphdr*)env->out_buff);
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
-	env->probes[curr_query].sequence = htons(env->total_sent);
-	env->used_probes++;
+	env->probes[curr_query].sequence = htons((uint16_t)env->total_sent);
 	env->probes[curr_query].probe = env->curr_probe;
 	env->probes[curr_query].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	env->probes[curr_query].port = htons(env->port);
@@ -75,7 +74,6 @@ int		send_icmp_probes(t_env *env)
 			break;
 		if (env->outgoing_packets < env->squeries
 			&& env->total_sent < env->max_packets
-			&& env->used_probes < env->squeries
 			&& !are_last_ttl_probes_all_sent(env))
 		{
 			//dprintf(STDOUT_FILENO, "Sending\n");
