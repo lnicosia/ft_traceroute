@@ -70,13 +70,10 @@ int	ft_traceroute(int ac, char **av)
 		return 2;
 	}
 	init_sockets(&env);
-	//	Store twice the number of squeries
-	//	Because we may have at worst all the sent probes
-	//	and all the received probes saved at the same time
-	env.probes = (t_probe*)malloc(env.squeries * 2 * sizeof(t_probe));
+	env.probes = (t_probe*)malloc(env.max_packets * sizeof(t_probe));
 	if (env.probes == NULL)
 		free_and_exit_failure(&env);
-	ft_bzero(env.probes, env.squeries * 2 * sizeof(t_probe));
+	ft_bzero(env.probes, env.max_packets * sizeof(t_probe));
 	if (env.opt & OPT_MODE_ICMP)
 		send_icmp_probes(&env);
 	else if (env.opt & OPT_MODE_UDP)

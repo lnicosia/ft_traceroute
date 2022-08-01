@@ -12,7 +12,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 	//	Maximum 10 probes per hop
 	t_probe				*probes[10] = { NULL };
 
-	for (size_t i = 0; i < env->squeries * 2; i++)
+	for (size_t i = 0; i < env->max_packets; i++)
 	{
 		if (env->probes[i].ttl == ttl)
 			probes[env->probes[i].probe] = &env->probes[i];
@@ -77,7 +77,7 @@ void	print_next_received_probes(t_env *env)
 	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < end; i++)
 	{
 		size_t	received = 0;
-		for (size_t j = 0; j < env->squeries * 2; j++)
+		for (size_t j = 0; j < env->max_packets; j++)
 		{
 			if (env->probes[j].ttl == i && env->probes[j].received == 1)
 				received++;
@@ -93,7 +93,7 @@ t_probe	*find_icmp_probe(struct icmphdr* icmphdr, t_env *env)
 {
 	t_probe	*res = NULL;
 	size_t	i;
-	for (i = 0; i < env->squeries * 2; i++)
+	for (i = 0; i < env->max_packets; i++)
 	{
 			if (icmphdr->un.echo.id == env->id
 			&& icmphdr->un.echo.sequence == env->probes[i].sequence)
@@ -115,7 +115,7 @@ t_probe	*find_udp_probe(struct udphdr *udphdr, t_env *env)
 {
 	t_probe	*res = NULL;
 	size_t	i;
-	for (i = 0; i < env->squeries * 2; i++)
+	for (i = 0; i < env->max_packets; i++)
 	{
 		if (udphdr->uh_dport == env->probes[i].port)
 		{
@@ -174,7 +174,7 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		//dprintf(STDOUT_FILENO, "Received enough packets\n");
 		env->dest_reached = 1;
 	}
-	for (size_t i = 0; i < env->squeries * 2; i++)
+	for (size_t i = 0; i < env->max_packets; i++)
 	{
 		if (env->probes[i].ttl == probe->ttl && env->probes[i].received)
 			received++;
@@ -215,9 +215,11 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 
 void	flush_received_packets(uint8_t last_ttl, t_env *env)
 {
+	//printf("flusing from %d to %d\n", env->last_printed_ttl + 1, last_ttl);
 	if (env->last_printed_ttl + 1 > last_ttl)
 		return ;
-	for (uint8_t i = ++env->last_printed_ttl; i <= last_ttl; i++)
+	//printf("Go\n");
+	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i <= last_ttl; i++)
 	{
 		print_probes(i, env);
 	}

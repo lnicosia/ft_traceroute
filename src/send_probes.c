@@ -5,14 +5,14 @@
 static void	send_current_probes(t_env *env)
 {
 	size_t	curr_query = first_available_probe(env);
-	if (curr_query >= env->squeries * 2)
+	if (curr_query >= env->max_packets)
 	{
-		//printf("max\n");
+		printf("No space left\n");
 		return ;
 	}
 	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", curr_query);
-	if (env->opt & OPT_VERBOSE)
-		dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
+	//if (env->opt & OPT_VERBOSE)
+		//dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
 	ft_bzero(env->out_buff, env->total_packet_size);
 	env->probes[curr_query].ttl = env->ttl;
 	env->probes[curr_query].used = 1;
@@ -59,7 +59,7 @@ int		send_probes(t_env *env)
 			break;
 		if (env->outgoing_packets < env->squeries
 			&& env->total_sent < env->max_packets
-			&& env->used_probes < env->squeries
+			&& env->used_probes < env->max_packets
 			&& !are_last_ttl_probes_all_sent(env))
 		{
 			//dprintf(STDOUT_FILENO, "Sending\n");
@@ -68,9 +68,9 @@ int		send_probes(t_env *env)
 		else// if (env->total_received < env->max_packets)
 		{
 			//dprintf(STDOUT_FILENO, "Receiving\n");
-			//dprintf(STDOUT_FILENO, "%ld used probes\n", env->used_probes);
-			/*dprintf(STDOUT_FILENO, "%ld outgoing packets\n", env->outgoing_packets);
-			dprintf(STDOUT_FILENO, "%ld used probes\n", env->used_probes);
+			/*dprintf(STDOUT_FILENO, "%ld/%ld used probes\n", env->used_probes,
+				env->max_packets);
+			dprintf(STDOUT_FILENO, "%ld outgoing packets\n", env->outgoing_packets);
 			dprintf(STDOUT_FILENO, "%ld/%ld sent\n",
 				env->total_sent, env->max_packets);
 			dprintf(STDOUT_FILENO, "%d\n", are_last_ttl_probes_all_sent(env));*/

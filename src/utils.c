@@ -4,7 +4,7 @@
 size_t	first_available_probe(t_env *env)
 {
 	size_t	i;
-	for (i = 0; i < env->squeries * 2; i++)
+	for (i = 0; i < env->max_packets; i++)
 	{
 		if (env->probes[i].used == 0)
 			return i;
