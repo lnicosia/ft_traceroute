@@ -43,7 +43,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVnIw:m:q:N:";
+	const char	*optstring = "-hvVnIw:m:q:N:p:";
 	static struct option long_options[] =
 	{
 		{"help",		0,					0, 'h'},
@@ -53,6 +53,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 		{"queries",		required_argument,	0, 'q'},
 		{"sim-queries", required_argument,	0, 'N'},
 		{"wait",		required_argument,	0, 'w'},
+		{"port",		required_argument,	0, 'p'},
 		{0,				0,					0,	0 }
 	};
 
@@ -86,6 +87,12 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				env->max.tv_usec = (suseconds_t)(fractional * 1000000);
 				if (timeout < 10e-7)
 					env->max.tv_usec = 1;
+				break;
+			}
+			case 'p':
+			{
+				double port = ft_atof(optarg);
+				env->port = (uint16_t)port;
 				break;
 			}
 			case 'N':

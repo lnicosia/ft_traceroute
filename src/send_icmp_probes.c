@@ -9,7 +9,7 @@ void	fill_icmp_header(struct icmphdr* icmphdr, t_env *env)
 	icmphdr->code = 0;
 	icmphdr->un.echo.id = env->id;
 	ft_strcpy(env->out_buff + ICMP_HEADER_SIZE, "Bonjour oui");
-	icmphdr->un.echo.sequence = htons((uint16_t)env->total_sent);
+	icmphdr->un.echo.sequence = htons(env->port);
 	icmphdr->checksum = checksum(icmphdr,
 		(int)(env->total_packet_size - IP_HEADER_SIZE));
 }
@@ -18,13 +18,13 @@ static void	send_current_probes(t_env *env)
 {
 	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", env->total_sent);
 	if (env->opt & OPT_VERBOSE)
-		dprintf(STDOUT_FILENO, "Sending ttl=%hhd sequence=%ld\n",
-			env->ttl, env->total_sent);
+		dprintf(STDOUT_FILENO, "Sending ttl=%hhd sequence=%d\n",
+			env->ttl, env->port);
 	fill_icmp_header((struct icmphdr*)env->out_buff, env);
 	if (env->opt & OPT_VERBOSE)
 		print_icmp_header((struct icmphdr*)env->out_buff);
 	env->probes[env->total_sent].ttl = env->ttl;
-	env->probes[env->total_sent].sequence = htons((uint16_t)env->total_sent);
+	env->probes[env->total_sent].sequence = htons(env->port++);
 	env->probes[env->total_sent].probe = env->curr_probe;
 	env->probes[env->total_sent].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
 	env->probes[env->total_sent].port = htons(env->port);
