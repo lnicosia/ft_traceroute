@@ -55,6 +55,10 @@ int		send_probes(t_env *env)
 			&& !are_last_ttl_probes_all_sent(env))
 		{
 			//dprintf(STDOUT_FILENO, "Sending\n");
+			if (env->sendwait.tv_sec != 0)
+				sleep((unsigned int)env->sendwait.tv_sec);
+			if (env->sendwait.tv_usec != 0)
+				usleep((unsigned int)env->sendwait.tv_usec);
 			send_current_probes(env);
 		}
 		else// if (env->total_received < env->max_packets)

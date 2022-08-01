@@ -27,6 +27,7 @@ int		resolve_hostname(char *hostname, t_env *env)
 	if (!(env->canonname = ft_strdup(ai->ai_canonname)))
 	{
 		perror("ft_traceroute: ft_strdup");
+		freeaddrinfo(ai);
 		free_and_exit_failure(env);
 	}
 	struct addrinfo *tmp = ai;

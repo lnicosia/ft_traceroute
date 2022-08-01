@@ -43,7 +43,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 {
 	int	opt, option_index = 0, count = 1;
 	char		*optarg = NULL;
-	const char	*optstring = "-hvVnIw:m:q:N:p:";
+	const char	*optstring = "-hvVnIw:m:q:N:p:z:";
 	static struct option long_options[] =
 	{
 		{"help",		0,					0, 'h'},
@@ -54,7 +54,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 		{"sim-queries", required_argument,	0, 'N'},
 		{"wait",		required_argument,	0, 'w'},
 		{"port",		required_argument,	0, 'p'},
-		{"sport",		required_argument,	0,  0 },
+		{"sentwait",	required_argument,	0, 'z'},
 		{0,				0,					0,	0 }
 	};
 
@@ -67,7 +67,8 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 			{
 				if (ft_strequ(long_options[option_index].name, "sport"))
 				{
-					printf("Sport = %d\n", ft_atoi(optarg));
+					double port = ft_atof(optarg);
+					env->sport = (uint16_t)port;
 				}
 				break;
 			}
@@ -101,11 +102,38 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 					env->max.tv_usec = 1;
 				break;
 			}
+			case 'z':
+			{
+				double sendwait = ft_atof(optarg);
+				if (sendwait < 0)
+				{
+					dprintf(STDERR_FILENO, "bad sendtime `-%f' specified\n",
+						sendwait);
+					free_and_exit_failure(env);
+				}
+				if (sendwait > 10)
+				{
+					env->sendwait.tv_sec = 0;
+					env->sendwait.tv_usec = (suseconds_t)sendwait;
+				}
+				else
+				{
+					double integral;
+					double fractional = modf(sendwait, &integral);
+					env->sendwait.tv_sec = (time_t)integral;
+					env->sendwait.tv_usec = (suseconds_t)(fractional * 1000000);
+				}
+				if (sendwait < 10e-7)
+					env->sendwait.tv_usec = 1;
+				printf("Sendwait for %ld sec and %ld usec\n",
+					env->sendwait.tv_sec, env->sendwait.tv_usec);
+				env->squeries = 1;
+				break;
+			}
 			case 'p':
 			{
 				double port = ft_atof(optarg);
 				env->port = (uint16_t)port;
-				printf("port = %d\n", env->port);
 				break;
 			}
 			case 'N':

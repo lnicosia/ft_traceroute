@@ -90,6 +90,7 @@ typedef struct			s_env
 	size_t				max_packets;
 	size_t				nb_hops_to_print;
 	struct timeval		max;
+	struct timeval		sendwait;
 	double				here;
 	double				near;
 	uint8_t				*hops_to_print;
@@ -102,10 +103,11 @@ typedef struct			s_env
 	uint16_t			sequence;
 	uint16_t			id;
 	uint16_t			port;
+	uint16_t			sport;
 	uint8_t				ttl;
 	uint8_t				last_ttl;
 	uint8_t				last_printed_ttl;
-	char				padding[3];
+	char				padding[1];
 }						t_env;
 
 int						ft_traceroute(int ac, char **av);
