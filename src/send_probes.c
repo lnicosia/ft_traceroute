@@ -4,10 +4,8 @@
 
 static void	send_current_probes(t_env *env)
 {
-	//dprintf(STDOUT_FILENO, "Sending on socket %ld\n", env->total_sent);
 	if (env->opt & OPT_VERBOSE)
 		dprintf(STDOUT_FILENO, "Sending ttl=%hhd port=%d\n", env->ttl, env->port);
-	//ft_bzero(env->out_buff, env->total_packet_size);
 	env->probes[env->total_sent].ttl = env->ttl;
 	env->probes[env->total_sent].probe = env->curr_probe;
 	env->probes[env->total_sent].checksum = ((struct udphdr*)env->out_buff)->uh_sum;
@@ -54,26 +52,18 @@ int		send_probes(t_env *env)
 			&& env->total_sent < env->max_packets
 			&& !are_last_ttl_probes_all_sent(env))
 		{
-			//dprintf(STDOUT_FILENO, "Sending\n");
-			if (env->sendwait.tv_sec != 0)
-				sleep((unsigned int)env->sendwait.tv_sec);
-			if (env->sendwait.tv_usec != 0)
-				usleep((unsigned int)env->sendwait.tv_usec);
+			if (env->total_sent > 0)
+			{
+				if (env->sendwait.tv_sec != 0)
+					sleep((unsigned int)env->sendwait.tv_sec);
+				if (env->sendwait.tv_usec != 0)
+					usleep((unsigned int)env->sendwait.tv_usec);
+			}
 			send_current_probes(env);
 		}
-		else// if (env->total_received < env->max_packets)
-		{
-			//dprintf(STDOUT_FILENO, "Receiving\n");
-			/*dprintf(STDOUT_FILENO, "%ld/%ld used probes\n", env->used_probes,
-				env->max_packets);
-			dprintf(STDOUT_FILENO, "%ld outgoing packets\n", env->outgoing_packets);
-			dprintf(STDOUT_FILENO, "%ld/%ld sent\n",
-				env->total_sent, env->max_packets);
-			dprintf(STDOUT_FILENO, "%d\n", are_last_ttl_probes_all_sent(env));*/
+		else
 			receive_messages(env);
-		}
 	}
-	//dprintf(STDOUT_FILENO, "End of loop\n");
 	if (env->last_ttl == 0)
 		flush_received_packets(env->ttl, env);
 	else
