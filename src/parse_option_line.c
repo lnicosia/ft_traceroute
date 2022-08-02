@@ -13,7 +13,42 @@ static void	print_version(void)
 
 void		print_usage(int fd)
 {
-	dprintf(fd, "Usage:\n  traceroute [ -hvV ] host [ packetlen ]\n");
+	dprintf(fd, "Usage:\n  ft_traceroute [ -hInvV ] [-m max_ttl ] [ -N squeries ] " \
+		"[ -p port ] [ -w MAX ] [ -q nqueries ] [ -z sendwait ] host [ packetlen ]\n");
+	dprintf(fd, "Options:\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-I", "  --icmp", "Use ICMP ECHO for tracerouting\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-m max_ttl", "  --max-hops=max_ttl", "\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "Set the max number of hops (max TTL to be\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "reached). Default is 30\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-N squeries", "  --sim-queries=squeries", "\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "Set the number of probes to be tried\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "simultaneously (default is 16)\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-n", "", "Resolve IP addresses to their domain names\n");
+	dprintf(fd, "%s%2s%-21s%s", "  ", "-p port", "  --port=port", "Set the destination port to use. It is either\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "initial udp port value for \"default\" method\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "(incremented by each probe, default is 33434), or\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "initial seq for \"icmp\" (incremented as well,\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "default from 1)\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-w MAX", "  --wait=MAX", "\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "Wait for a probe no more than MAX (default 5.0) seconds\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "", "(float point values allowed too)\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-q nqueries", "  --queries=nqueries", "\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "Set the number of probes per each hop. Default is\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "3\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-z sendwait", "  --sendwait=sendwait", "\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "Minimal time interval between probes (default 0).\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "If the value is more than 10, then it specifies a\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "number in milliseconds, else it is a number of\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "", "  ", "seconds (float point values allowed too)\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-v", "  --verbose", "Verbose mode. Print send and received packets headers\n");
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-V", "  --version", "Print version info and exit\n");
+
+	dprintf(fd, "%s%2s%-26s%s", "  ", "-h", "  --help", "Read this help and exit\n");
+	dprintf(fd, "\nArguments:\n");
+	dprintf(fd, "+    host          The host to traceroute to\n");
+	dprintf(fd, "     packetlen     The full packets length (default is the length of an IP\n");
+	dprintf(fd, "                   header plus 40). Can be ignored or increased to a minimal\n");
+	dprintf(fd, "                   allowed value\n");
 }
 
 static int	is_valid_packetlen(char *av)
@@ -54,7 +89,7 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 		{"sim-queries", required_argument,	0, 'N'},
 		{"wait",		required_argument,	0, 'w'},
 		{"port",		required_argument,	0, 'p'},
-		{"sentwait",	required_argument,	0, 'z'},
+		{"sendwait",	required_argument,	0, 'z'},
 		{0,				0,					0,	0 }
 	};
 
@@ -63,15 +98,6 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 	{
 		switch (opt)
 		{
-			case 0:
-			{
-				if (ft_strequ(long_options[option_index].name, "sport"))
-				{
-					double port = ft_atof(optarg);
-					env->sport = (uint16_t)port;
-				}
-				break;
-			}
 			case 'v':
 				env->opt |= OPT_VERBOSE;
 				break;
@@ -111,10 +137,10 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 						sendwait);
 					free_and_exit_failure(env);
 				}
-				if (sendwait > 10)
+				if (sendwait >= 10)
 				{
 					env->sendwait.tv_sec = 0;
-					env->sendwait.tv_usec = (suseconds_t)sendwait;
+					env->sendwait.tv_usec = (suseconds_t)sendwait * 1000;
 				}
 				else
 				{
@@ -179,14 +205,14 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				return 1;
 			case '?':
 			{
-				print_usage(STDERR_FILENO);
+				//print_usage(STDERR_FILENO);
 				free_and_exit_failure(env);
 				break;
 			}
 			default:
 			{
 				print_usage(STDERR_FILENO);
-				free_and_exit_failure(env);
+				//free_and_exit_failure(env);
 				break;
 			}
 		}
