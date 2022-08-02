@@ -125,9 +125,8 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				}
 				if (sendwait < 10e-7)
 					env->sendwait.tv_usec = 1;
-				printf("Sendwait for %ld sec and %ld usec\n",
-					env->sendwait.tv_sec, env->sendwait.tv_usec);
 				env->squeries = 1;
+				env->max = env->sendwait;
 				break;
 			}
 			case 'p':

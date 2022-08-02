@@ -170,6 +170,8 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 	probe->recv_time = recv_time;
 	env->outgoing_packets--;
 	env->total_received++;
+	if (env->sendwait.tv_sec != 0 || env->sendwait.tv_usec != 0)
+		print_probes(probe->ttl, env);
 	if (env->total_received >= env->max_packets)
 	{
 		//dprintf(STDOUT_FILENO, "Received enough packets\n");
