@@ -205,14 +205,12 @@ int	parse_traceroute_options(int ac, char **av, t_env *env)
 				return 1;
 			case '?':
 			{
-				//print_usage(STDERR_FILENO);
 				free_and_exit_failure(env);
 				break;
 			}
 			default:
 			{
-				print_usage(STDERR_FILENO);
-				//free_and_exit_failure(env);
+				free_and_exit_failure(env);
 				break;
 			}
 		}

@@ -43,7 +43,5 @@ int		resolve_hostname(char *hostname, t_env *env)
 		tmp = tmp->ai_next;
 	}
 	freeaddrinfo(ai);
-	//	Test on localhost
-	//env->ip.sin_addr.s_addr = inet_addr("127.0.0.1");
 	return 0;
 }

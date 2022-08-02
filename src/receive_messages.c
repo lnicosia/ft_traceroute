@@ -22,9 +22,7 @@ void	print_probes(uint8_t ttl, t_env *env)
 	{
 		if (probes[i] == NULL)
 			continue;
-		//dprintf(STDOUT_FILENO, "ttl = %hhu\n", ttl);
 		probe = probes[i];
-		//dprintf(STDOUT_FILENO, "probe received = %d\n", probe->received);
 		if (i == 0)
 			dprintf(STDOUT_FILENO, "%2d  ", ttl);
 		else
@@ -48,7 +46,6 @@ void	print_probes(uint8_t ttl, t_env *env)
 		}
 		else
 			dprintf(STDOUT_FILENO, "*");
-		//ft_bzero(probe, sizeof(*probe));
 		env->hops_to_print[probe->ttl] = 0;
 		last_printed = i;
 		printed++;
@@ -76,12 +73,10 @@ void	print_next_received_probes(t_env *env)
 		end = env->last_ttl;
 	if (env->last_printed_ttl + 1 >= end)
 		return ;
-	//printf("checking between %d and %d\n", env->last_printed_ttl + 1, end);
 	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i < end; i++)
 	{
 		if (env->hops_to_print[i] == 1)
 		{
-			//printf("Need to print %d\n", i);
 			print_probes(i, env);
 			env->nb_hops_to_print--;
 		}
@@ -99,10 +94,6 @@ t_probe	*find_icmp_probe(struct icmphdr* icmphdr, t_env *env)
 			if (icmphdr->un.echo.id == env->id
 			&& icmphdr->un.echo.sequence == env->probes[i].sequence)
 		{
-			//dprintf(STDOUT_FILENO,
-			//	"Received response from probe %ld of ttl %d and sequence %d\n",
-			//	env->probes[i].probe, env->probes[i].ttl,
-			//	ntohs(icmphdr->un.echo.sequence));
 			res = &env->probes[i];
 			if (env->last_ttl != 0 && env->probes[i].ttl > env->last_ttl)
 				return NULL;
@@ -120,9 +111,6 @@ t_probe	*find_udp_probe(struct udphdr *udphdr, t_env *env)
 	{
 		if (udphdr->uh_dport == env->probes[i].port)
 		{
-			//dprintf(STDOUT_FILENO,
-			//	"Received response from probe %ld of ttl %d and port %d\n",
-			//	env->probes[i].probe, env->probes[i].ttl, ntohs(udphdr->uh_dport));
 			res = &env->probes[i];
 			if (env->last_ttl != 0 && env->probes[i].ttl > env->last_ttl)
 				return NULL;
@@ -174,26 +162,16 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		print_probes(probe->ttl, env);
 	if (env->total_received >= env->max_packets)
 	{
-		//dprintf(STDOUT_FILENO, "Received enough packets\n");
 		env->dest_reached = 1;
 	}
 	for (size_t i = 0; i < env->total_sent; i++)
 	{
 		if (env->probes[i].ttl == probe->ttl && env->probes[i].received)
 			received++;
-		//dprintf(STDOUT_FILENO, "probe %ld ttl = %d, received = %d used = %d\n",
-		//	i, env->probes[i].ttl - 1, env->probes[i].received, env->probes[i].used);
 	}
-	//dprintf(STDOUT_FILENO, "received %d probes of hop %d\n", received, probe->hop);
 	//	We received all the sent probes for this ttl
 	if (received == env->probes_per_hop)
 	{
-		if (probe->ttl == env->last_ttl)
-		{
-			//dprintf(STDOUT_FILENO, "\n%ld probes received for dest IP (ttl %hhu), dest reached\n",
-			//	env->probes_per_hop, env->last_ttl);
-			//env->dest_reached = 1;
-		}
 		if (probe->ttl == env->last_printed_ttl + 1)
 		{
 			print_probes(probe->ttl, env);
@@ -213,21 +191,15 @@ void	update_probes(char *in_buff, ssize_t recv_bytes,
 		|| (env->opt & OPT_MODE_UDP && icmphdr->type == ICMP_DEST_UNREACH
 			&& icmphdr->code == ICMP_PORT_UNREACH)))
 	{
-		//dprintf(STDOUT_FILENO, "Reached at ttl = %hhu\n", probe->ttl);
-		//dprintf(STDOUT_FILENO, "ip = %s\n", inet_ntoa(ip->ip_src));
 		env->last_ttl = probe->ttl;
 		env->max_packets = env->probes_per_hop * env->last_ttl;
-		//env->dest_reached = 1;
-		//dprintf(STDOUT_FILENO, "Last printed ttl = %hhu\n", env->last_printed_ttl);
 	}
 }
 
 void	flush_received_packets(uint8_t last_ttl, t_env *env)
 {
-	//printf("flusing from %d to %d\n", env->last_printed_ttl + 1, last_ttl);
 	if (env->last_printed_ttl + 1 > last_ttl)
 		return ;
-	//printf("Go\n");
 	for (uint8_t i = (uint8_t)(env->last_printed_ttl + 1); i <= last_ttl; i++)
 	{
 		print_probes(i, env);
@@ -259,12 +231,10 @@ void	receive_messages(t_env *env)
 		env->outgoing_packets = 0;
 		if (env->total_received >= env->max_packets)
 		{
-			//dprintf(STDOUT_FILENO, "Received or not all packets\n");
 			env->dest_reached = 1;
 		}
 		if (env->last_ttl != 0)
 		{
-			//dprintf(STDOUT_FILENO, "Dest reached and not received\n");
 			env->dest_reached = 1;
 		}
 		else
@@ -275,14 +245,11 @@ void	receive_messages(t_env *env)
 		recv_time = get_time();
 		struct ip *ip = (struct ip*)in_buff;
 		struct icmphdr *icmphdr = (struct icmphdr*)(ip + 1);
-		//struct udphdr	*udphdr =
-		//	(struct udphdr*)((void*)icmphdr + ICMP_HEADER_SIZE + IP_HEADER_SIZE);
 		//	Only accept ICMP 
 		if (icmphdr->type != ICMP_TIME_EXCEEDED
 			&& icmphdr->type != ICMP_ECHOREPLY
 			&& icmphdr->type != ICMP_DEST_UNREACH)
 			return ;
-		//dprintf(STDOUT_FILENO, "ttl = %d\n", ip->ip_ttl);
 		if (env->opt & OPT_VERBOSE)
 		{
 			dprintf(STDOUT_FILENO, "Received:\n");

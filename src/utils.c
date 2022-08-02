@@ -51,7 +51,6 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 		return 0;
 	if (env->ttl > env->last_ttl)
 	{
-		//dprintf(STDOUT_FILENO, "Dest reached and ttl > env->last_ttl\n");
 		return 1;
 	}
 	if (env->all_last_probes_sent)
@@ -65,10 +64,8 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 		if (env->probes[i].ttl == env->last_ttl)
 			nb_last_ttl_probes++;
 	}
-	//dprintf(STDOUT_FILENO, "Sent %d probes of ttl %d\n", nb_last_ttl_probes, env->last_ttl);
 	if (nb_last_ttl_probes == env->probes_per_hop)
 	{
-		//dprintf(STDOUT_FILENO, "All last probes sent\n");
 		env->all_last_probes_sent = 1;
 		size_t i = env->last_printed_ttl * env->probes_per_hop;
 		for ( ; i < env->total_sent; i++)
@@ -76,15 +73,10 @@ int		are_last_ttl_probes_all_sent(t_env *env)
 			if (env->probes[i].ttl == env->last_ttl
 				&& env->probes[i].received == 1)
 			{
-				///dprintf(STDOUT_FILENO, "Send time is %ld seconds\n", env->probes[i].send_time);
-				//dprintf(STDOUT_FILENO, "Recv time is %ld seconds\n", env->probes[i].recv_time);
 				uint64_t diff = env->probes[i].recv_time - env->probes[i].send_time;
 				double sec_timeout = 
 					env->here * ((double)diff / 1000000);
-				//dprintf(STDOUT_FILENO, "Time is %lf seconds\n", sec_timeout);
 				double fraction = sec_timeout - (double)((uint64_t)sec_timeout);
-				//dprintf(STDOUT_FILENO, "Fractionnal is %lf seconds\n", fraction);
-				//dprintf(STDOUT_FILENO, "usec is %lf seconds\n", fraction * 1000000);
 				struct timeval timeout =
 				{
 					(time_t)(sec_timeout),
